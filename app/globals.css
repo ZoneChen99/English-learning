@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f7faf6;
+  --surface: #ffffff;
+  --ink: #2e3a33;
+  --muted: #7a8a80;
+  --accent: #7fb77e;
+  --accent-soft: #e3f0e2;
+  --deco: #f3c6d3;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC",
+    "Microsoft YaHei", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.8s ease, color 0.8s ease;
+  min-height: 100vh;
+}
+
+/* 语义化主题色（由 SeasonTheme 在 <html> 上动态覆盖） */
+.bg-bg { background-color: var(--bg); }
+.bg-surface { background-color: var(--surface); }
+.text-ink { color: var(--ink); }
+.text-muted { color: var(--muted); }
+.text-accent { color: var(--accent); }
+.bg-accent { background-color: var(--accent); }
+.bg-accent-soft { background-color: var(--accent-soft); }
+.border-accent { border-color: var(--accent); }
+.fill-accent { fill: var(--accent); }
+.fill-deco { fill: var(--deco); }

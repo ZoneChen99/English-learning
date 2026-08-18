@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>英语学习 · 主页原型</title>
+<style>
+:root{
+  --bg:#FBFCF9; --accent:#8FBF9F; --ink:#3A3A38; --muted:#8A8A82;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+  transition:background .6s ease,color .6s ease;
+}
+.wrap{max-width:960px;margin:0 auto;padding:64px 24px 120px;}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:72px;}
+.brand{font-size:15px;letter-spacing:2px;color:var(--muted);font-weight:400;}
+.season-tag{font-size:13px;letter-spacing:3px;color:var(--accent);
+  border:1px solid var(--accent);border-radius:999px;padding:6px 16px;}
+.hero{display:flex;align-items:center;gap:40px;flex-wrap:wrap;margin-bottom:88px;}
+.hero-text{flex:1 1 300px;min-width:260px;}
+.hero-art{flex:0 0 200px;width:200px;height:220px;}
+.art{display:none;width:100%;height:100%;}
+.art.active{display:block;}
+@media(max-width:560px){.hero-art{margin:24px auto 0;}}
+.hello{font-family:"Songti SC","Noto Serif SC",serif;font-size:clamp(34px,7vw,56px);
+  font-weight:500;letter-spacing:1px;line-height:1.3;}
+.hello .dot{display:inline-block;width:12px;height:12px;border-radius:50%;
+  background:var(--accent);margin-left:14px;vertical-align:middle;}
+.date{margin-top:18px;font-size:15px;color:var(--muted);letter-spacing:1px;}
+.rule{margin-top:28px;width:120px;height:2px;background:var(--accent);}
+.cards{display:grid;grid-template-columns:1fr;gap:20px;}
+@media(min-width:720px){.cards{grid-template-columns:repeat(3,1fr);gap:24px;}}
+.card{background:#fff;border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);
+  border-radius:18px;padding:32px 28px;
+  transition:transform .25s ease,box-shadow .25s ease;}
+.card:hover{transform:translateY(-4px);box-shadow:0 12px 30px -18px var(--accent);}
+.card .kicker{font-size:13px;letter-spacing:2px;color:var(--accent);}
+.card h3{font-size:22px;font-weight:500;margin:14px 0 10px;
+  font-family:"Songti SC","Noto Serif SC",serif;}
+.card p{font-size:14px;color:var(--muted);}
+.switcher{position:fixed;right:18px;bottom:18px;display:flex;gap:8px;
+  background:#fff;padding:8px;border-radius:999px;
+  box-shadow:0 8px 24px -12px rgba(0,0,0,.25);}
+.switcher button{border:none;background:transparent;font-size:14px;width:38px;height:38px;
+  border-radius:50%;cursor:pointer;color:var(--muted);font-family:inherit;}
+.switcher button.active{background:var(--accent);color:#fff;}
+footer{margin-top:80px;text-align:center;font-size:13px;color:var(--muted);letter-spacing:1px;}
+</style>
+</head>
+<body data-season="spring">
+<div class="wrap">
+  <header>
+    <div class="brand">ENGLISH · 每天一点点</div>
+    <div class="season-tag" id="seasonTag">春</div>
+  </header>
+  <section class="hero">
+    <div class="hero-text">
+      <div class="hello">今天，慢慢来<span class="dot"></span></div>
+      <div class="date" id="date">2026年8月18日 周二</div>
+      <div class="rule"></div>
+    </div>
+    <div class="hero-art" id="heroArt">
+      <!-- 春：花开 -->
+      <svg class="art" data-s="spring" viewBox="0 0 200 220" aria-hidden="true">
+        <path d="M64 212 C64 165 64 135 64 112" stroke="#8FBF9F" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M136 212 C136 172 136 145 136 124" stroke="#8FBF9F" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M100 212 C100 155 100 125 100 100" stroke="#8FBF9F" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="48" cy="150" rx="13" ry="6" fill="#BFE3C8" transform="rotate(-32 48 150)"/>
+        <ellipse cx="120" cy="165" rx="13" ry="6" fill="#BFE3C8" transform="rotate(28 120 165)"/>
+        <g transform="translate(64,108)">
+          <circle cx="0" cy="-13" r="8" fill="#F4C7C3"/><circle cx="12" cy="-4" r="8" fill="#F4C7C3"/><circle cx="8" cy="10" r="8" fill="#F4C7C3"/><circle cx="-8" cy="10" r="8" fill="#F4C7C3"/><circle cx="-12" cy="-4" r="8" fill="#F4C7C3"/><circle cx="0" cy="0" r="6" fill="#8FBF9F"/>
+        </g>
+        <g transform="translate(136,120)">
+          <circle cx="0" cy="-11" r="7" fill="#F4C7C3"/><circle cx="10" cy="-3" r="7" fill="#F4C7C3"/><circle cx="7" cy="9" r="7" fill="#F4C7C3"/><circle cx="-7" cy="9" r="7" fill="#F4C7C3"/><circle cx="-10" cy="-3" r="7" fill="#F4C7C3"/><circle cx="0" cy="0" r="5" fill="#8FBF9F"/>
+        </g>
+        <g transform="translate(100,96)">
+          <circle cx="0" cy="-12" r="7.5" fill="#F4C7C3"/><circle cx="11" cy="-4" r="7.5" fill="#F4C7C3"/><circle cx="7" cy="10" r="7.5" fill="#F4C7C3"/><circle cx="-7" cy="10" r="7.5" fill="#F4C7C3"/><circle cx="-11" cy="-4" r="7.5" fill="#F4C7C3"/><circle cx="0" cy="0" r="5.5" fill="#8FBF9F"/>
+        </g>
+      </svg>
+      <!-- 夏：河流与树 -->
+      <svg class="art" data-s="summer" viewBox="0 0 200 220" aria-hidden="true">
+        <circle cx="158" cy="46" r="17" fill="#E0A93B"/>
+        <path d="M0 196 Q50 182 100 196 T200 196 L200 220 L0 220 Z" fill="#9DC3D6"/>
+        <path d="M0 206 Q50 194 100 206 T200 206" stroke="#C2DBE8" stroke-width="2" fill="none"/>
+        <rect x="92" y="118" width="11" height="64" rx="4" fill="#C98A4B"/>
+        <circle cx="97" cy="98" r="33" fill="#7FB069"/>
+        <circle cx="70" cy="112" r="21" fill="#8FBE77"/>
+        <circle cx="124" cy="112" r="21" fill="#8FBE77"/>
+      </svg>
+      <!-- 秋：落叶 -->
+      <svg class="art" data-s="autumn" viewBox="0 0 200 220" aria-hidden="true">
+        <path d="M44 36 C82 66 112 92 150 206" stroke="#8A6F5A" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M70 78 q11 -15 22 0 q-11 15 -22 0 z" fill="#C98A4B"/>
+        <path d="M120 120 q11 -15 22 0 q-11 15 -22 0 z" fill="#B5673A"/>
+        <path d="M96 150 q11 -15 22 0 q-11 15 -22 0 z" fill="#D9A05B"/>
+        <path d="M44 60 q10 -13 20 0 q-10 13 -20 0 z" fill="#D9A05B"/>
+        <path d="M158 70 q10 -13 20 0 q-10 13 -20 0 z" fill="#C98A4B"/>
+        <path d="M40 130 q10 -13 20 0 q-10 13 -20 0 z" fill="#B5673A"/>
+        <path d="M150 160 q10 -13 20 0 q-10 13 -20 0 z" fill="#D9A05B"/>
+      </svg>
+      <!-- 冬：雪与枯枝 -->
+      <svg class="art" data-s="winter" viewBox="0 0 200 220" aria-hidden="true">
+        <path d="M0 202 Q100 188 200 202 L200 220 L0 220 Z" fill="#E8EEF2"/>
+        <path d="M100 202 L100 120 M100 152 L80 122 M100 142 L122 112 M100 128 L86 102 M100 128 L114 102" stroke="#8FA9BC" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <g stroke="#CBD8E0" stroke-width="2" stroke-linecap="round">
+          <g transform="translate(60,55)"><line x1="-9" y1="0" x2="9" y2="0"/><line x1="0" y1="-9" x2="0" y2="9"/><line x1="-6" y1="-6" x2="6" y2="6"/><line x1="-6" y1="6" x2="6" y2="-6"/></g>
+          <g transform="translate(140,80)"><line x1="-9" y1="0" x2="9" y2="0"/><line x1="0" y1="-9" x2="0" y2="9"/><line x1="-6" y1="-6" x2="6" y2="6"/><line x1="-6" y1="6" x2="6" y2="-6"/></g>
+          <g transform="translate(95,40)"><line x1="-7" y1="0" x2="7" y2="0"/><line x1="0" y1="-7" x2="0" y2="7"/><line x1="-5" y1="-5" x2="5" y2="5"/><line x1="-5" y1="5" x2="5" y2="-5"/></g>
+        </g>
+      </svg>
+    </div>
+  </section>
+  <section class="cards">
+    <div class="card">
+      <div class="kicker">LEARN</div>
+      <h3>学单词</h3>
+      <p>每天 20 个新词，百词斩式科学复习，记牢不忘。</p>
+    </div>
+    <div class="card">
+      <div class="kicker">REVIEW</div>
+      <h3>复习</h3>
+      <p>在文章与影视片段的语境里温故，不再干背。</p>
+    </div>
+    <div class="card">
+      <div class="kicker">MEDIA</div>
+      <h3>影视</h3>
+      <p>边看边点词，整页字幕文稿陪你一起学。</p>
+    </div>
+  </section>
+  <footer>原型预览 · 季节会随日期自动变化，也可点右下角切换查看</footer>
+</div>
+<div class="switcher" id="switcher">
+  <button data-s="spring">春</button>
+  <button data-s="summer">夏</button>
+  <button data-s="autumn">秋</button>
+  <button data-s="winter">冬</button>
+</div>
+<script>
+const palettes={
+  spring:{bg:"#FBFCF9",accent:"#8FBF9F",ink:"#3A3A38",muted:"#8A8A82"},
+  summer:{bg:"#FCFBF6",accent:"#E0A93B",ink:"#3A3A36",muted:"#8A877C"},
+  autumn:{bg:"#FBF8F3",accent:"#C98A4B",ink:"#3A342E",muted:"#8A7E70"},
+  winter:{bg:"#F7F9FB",accent:"#8FA9BC",ink:"#33384A",muted:"#7E8794"}
+};
+const names={spring:"春",summer:"夏",autumn:"秋",winter:"冬"};
+function seasonOfMonth(m){
+  return (m>=2&&m<=4)?"spring":(m>=5&&m<=7)?"summer":(m>=8&&m<=10)?"autumn":"winter";
+}
+function apply(season){
+  const p=palettes[season];const r=document.documentElement.style;
+  r.setProperty("--bg",p.bg);r.setProperty("--accent",p.accent);
+  r.setProperty("--ink",p.ink);r.setProperty("--muted",p.muted);
+  document.getElementById("seasonTag").textContent=names[season];
+  document.querySelectorAll("#switcher button").forEach(b=>
+    b.classList.toggle("active",b.dataset.s===season));
+  document.querySelectorAll("#heroArt .art").forEach(a=>
+    a.classList.toggle("active",a.dataset.s===season));
+}
+function today(){
+  const d=new Date();const w=["日","一","二","三","四","五","六"][d.getDay()];
+  return d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日 周"+w;
+}
+document.getElementById("date").textContent=today();
+apply(seasonOfMonth(new Date().getMonth()));
+document.getElementById("switcher").addEventListener("click",e=>{
+  if(e.target.dataset.s) apply(e.target.dataset.s);
+});
+</script>
+</body>
+</html>
