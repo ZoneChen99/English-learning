@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>语境复习 · 句子/单词/混合模式预览</title>
+<style>
+  :root{
+    --bg:#fbfbf7; --surface:#ffffff; --ink:#2f3a34; --muted:#8a938c;
+    --accent:#7cb97f; --line:rgba(0,0,0,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.6}
+  .min-h{min-height:100vh;width:100%}
+  header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px}
+  .back{font-size:14px;color:var(--muted);text-decoration:none}
+  .back:hover{color:var(--ink)}
+  .pill{font-size:14px;color:var(--muted)}
+  .toolbar{max-width:680px;margin:0 auto;padding:16px 24px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .toolbar .lbl{font-size:12px;color:var(--muted)}
+  .seg{font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+  .seg.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  section{max-width:680px;margin:0 auto;padding:16px 24px 24px}
+  .sub{font-size:14px;color:var(--muted)}
+  .card{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:24px;
+    padding:32px;box-shadow:0 1px 2px rgba(0,0,0,.04);min-height:260px;display:flex;flex-direction:column}
+  .wordrow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h2{font-size:30px;font-weight:600}
+  .ph{color:var(--muted);font-size:18px}
+  .speak{margin-left:auto;width:40px;height:40px;border-radius:50%;
+    background:color-mix(in oklab,var(--accent) 10%,transparent);color:var(--accent);border:none;font-size:18px;cursor:pointer}
+  .speak:hover{background:color-mix(in oklab,var(--accent) 20%,transparent)}
+  .sentence{margin-top:20px;font-size:18px;color:color-mix(in oklab,var(--ink) 90%,transparent)}
+  .mask{display:inline-block;min-width:3.5rem;border-bottom:2px solid color-mix(in oklab,var(--accent) 60%,transparent);
+    text-align:center;color:color-mix(in oklab,var(--accent) 70%,transparent);user-select:none;letter-spacing:2px}
+  mark{background:color-mix(in oklab,var(--accent) 20%,transparent);color:var(--ink);border-radius:4px;padding:0 2px}
+  .zh{margin-top:8px;font-size:14px;color:var(--muted)}
+  .trans{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);color:var(--ink)}
+  .ex{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+  .ex .en{font-size:14px;color:color-mix(in oklab,var(--ink) 90%,transparent)}
+  .ex .zh2{margin-top:4px;font-size:14px;color:var(--muted)}
+  .btn{margin-top:24px;width:100%;padding:13px;border-radius:16px;border:none;background:var(--accent);color:#fff;font-size:14px;cursor:pointer}
+  .btn:hover{opacity:.9}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
+  .b2{padding:13px;border-radius:16px;font-size:14px;cursor:pointer;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+  .b2:hover{box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .b2.soft{background:color-mix(in oklab,var(--accent) 10%,transparent);color:var(--accent);border:none}
+  .b2.solid{background:var(--accent);color:#fff;border:none}
+  .hint{margin-top:12px;text-align:center;font-size:12px;color:var(--muted)}
+  .center{max-width:560px;margin:0 auto;padding:80px 24px;text-align:center}
+  .emoji{font-size:48px}.center h1{margin-top:16px;font-size:24px;font-weight:600}.center p{margin-top:12px;color:var(--muted)}
+  .row{margin-top:32px;display:flex;gap:12px;justify-content:center}
+  .ghost{padding:11px 20px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:14px;color:var(--ink);text-decoration:none;cursor:pointer}
+  .ghost.solid{background:var(--accent);color:#fff;border:none}
+  .note{max-width:680px;margin:8px auto 0;padding:0 24px;font-size:12px;color:var(--muted)}
+  .note code{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+</style>
+</head>
+<body>
+<div class="min-h" id="app"></div>
+
+<script>
+// 真实词库摘录（cet4），高保真还原
+const RAW = [
+  { word:"abruptly", phonetic:"əˈbrʌptli", translation:"突然地；唐突地", en:"He left the meeting abruptly.", zh:"他突然离开了会议。" },
+  { word:"accumulate", phonetic:"əˈkjuːmjəleɪt", translation:"积累；积聚", en:"Dust can accumulate in the corners of the room.", zh:"灰尘会在房间角落里积聚。" },
+  { word:"adequate", phonetic:"ˈædɪkwət", translation:"足够的；适当的", en:"The food we brought was adequate for the trip.", zh:"我们带的食物足够这次旅行。" },
+  { word:"ambiguous", phonetic:"æmˈbɪɡjuəs", translation:"模棱两可的；含糊不清的", en:"His answer to the question was ambiguous.", zh:"他对这个问题的回答含糊不清。" },
+  { word:"anticipate", phonetic:"ænˈtɪsɪpeɪt", translation:"预期；预料；期待", en:"We anticipate a rise in prices next month.", zh:"我们预料下个月价格会上涨。" },
+];
+
+// 构建带「本张呈现方式」的卡片
+let MODE = "sentence";
+let queue = [];
+let pos = 0, revealed = false;
+const stats = { recalled:0, fuzzy:0, forgot:0 };
+
+function buildQueue(){
+  queue = RAW.map(r=>{
+    const hasEx = !!r.en;
+    let useSentence;
+    if(MODE==="mixed") useSentence = Math.random()<0.5;
+    else useSentence = (MODE==="sentence");
+    return { ...r, useSentence: useSentence && hasEx };
+  });
+  pos=0; revealed=false;
+}
+function mask(en, word, show){
+  const re = new RegExp("\\b"+word.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","i");
+  const m = re.exec(en); if(!m) return en;
+  const b=en.slice(0,m.index), mt=en.slice(m.index,m.index+m[0].length), a=en.slice(m.index+m[0].length);
+  return b + (show?`<mark>${mt}</mark>`:`<span class="mask">＿＿＿＿</span>`) + a;
+}
+function speak(t){ if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(t); u.lang='en-US'; u.rate=.9; speechSynthesis.cancel(); speechSynthesis.speak(u);} }
+
+function render(){
+  const app=document.getElementById('app');
+  if(pos>=queue.length){ app.innerHTML=doneHTML(); return; }
+  const c=queue[pos];
+  const seg = `
+    <div class="toolbar">
+      <span class="lbl">呈现方式</span>
+      <span class="seg ${MODE==='sentence'?'on':''}" onclick="setMode('sentence')">句子模式</span>
+      <span class="seg ${MODE==='word'?'on':''}" onclick="setMode('word')">单词模式</span>
+      <span class="seg ${MODE==='mixed'?'on':''}" onclick="setMode('mixed')">混合模式</span>
+    </div>`;
+  const head=`<header><a class="back" href="#" onclick="return false">← 返回首页</a>
+    <span class="pill">春 · 语境复习 ${pos+1}/${queue.length} · ${MODE==='sentence'?'句子':MODE==='word'?'单词':'混合'}</span></header>`;
+
+  if(c.useSentence){
+    app.innerHTML = seg+head+`<section>
+      <p class="sub">在句子里把单词「捡」回来——先想，再揭晓。</p>
+      <div class="card">
+        <div class="wordrow">${revealed?`<h2>${c.word}</h2><span class="ph">/${c.phonetic}/</span>
+          <button class="speak" onclick="speak('${c.word}')">🔊</button>`:''}</div>
+        <p class="sentence">${mask(c.en,c.word,revealed)}</p>
+        ${revealed?`<p class="zh">${c.zh}</p><div class="trans">${c.translation}</div>`:''}
+      </div>
+      ${revealed?`<div class="grid3">
+        <button class="b2" onclick="rate('again')">没想起</button>
+        <button class="b2 soft" onclick="rate('good')">有点印象</button>
+        <button class="b2 solid" onclick="rate('easy')">想起来了</button></div>`
+      :`<button class="btn" onclick="reveal()">揭晓单词</button>`}
+      <p class="hint">${revealed?'记录你的回忆程度，马上进入下一个':'凭句子语境回忆这个单词'}</p>
+    </section>`;
+  } else {
+    app.innerHTML = seg+head+`<section>
+      <p class="sub">看着单词回想它的意思——先想，再揭晓。</p>
+      <div class="card">
+        <div class="wordrow"><h2>${c.word}</h2>
+          ${revealed?`<span class="ph">/${c.phonetic}/</span>`:''}
+          <button class="speak" onclick="speak('${c.word}')">🔊</button></div>
+        ${!revealed?`<p class="sentence" style="color:var(--muted)">这个单词是什么意思？</p>`
+          :`<div class="trans" style="margin-top:20px;border:0;padding:0">${c.translation}</div>
+             <div class="ex"><p class="en">${c.en}</p><p class="zh2">${c.zh}</p></div>`}
+      </div>
+      ${revealed?`<div class="grid3">
+        <button class="b2" onclick="rate('again')">没想起</button>
+        <button class="b2 soft" onclick="rate('good')">有点印象</button>
+        <button class="b2 solid" onclick="rate('easy')">想起来了</button></div>`
+      :`<button class="btn" onclick="reveal()">揭晓释义</button>`}
+      <p class="hint">${revealed?'记录你的回忆程度，马上进入下一个':'凭单词本身回忆它的释义'}</p>
+    </section>`;
+  }
+}
+function reveal(){ revealed=true; speak(queue[pos].word); render(); }
+function rate(g){ if(g==='easy')stats.recalled++; else if(g==='good')stats.fuzzy++; else stats.forgot++; revealed=false; pos++; render(); }
+function doneHTML(){ return `<header><a class="back" href="#" onclick="return false">← 返回首页</a><span class="pill">春 · 语境复习</span></header>
+  <div class="center"><div class="emoji">🌿</div><h1>这一轮复习完成</h1>
+  <p>记得 ${stats.recalled} · 模糊 ${stats.fuzzy} · 忘了 ${stats.forgot}</p>
+  <div class="row"><button class="ghost solid" onclick="restart()">再来一轮</button><a class="ghost" href="#" onclick="return false">返回首页</a></div></div>`; }
+function setMode(m){ MODE=m; buildQueue(); render(); }
+function restart(){ stats.recalled=stats.fuzzy=stats.forgot=0; buildQueue(); render(); }
+
+buildQueue();
+render();
+</script>
+<p class="note">触发方式：① URL 参数 <code>?mode=sentence|word|mixed</code>（如 <code>/review?mode=word</code>）；② 页内上方切换按钮；③ 选择会记忆到 localStorage，并同步进地址栏便于分享。混合模式 = 同一轮内两种呈现随机交替（同时支持）。</p>
+</body>
+</html>
