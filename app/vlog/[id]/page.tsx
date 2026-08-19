@@ -7,6 +7,7 @@ import { findFocusWord, findWord } from "@/lib/books";
 import { addWord, getProgress, updateProgress } from "@/lib/db";
 import { applyReview, type Grade } from "@/lib/sr";
 import { speak, warmupVoices } from "@/lib/audio";
+import { formatPos } from "@/lib/pos";
 import { useSeason } from "@/components/SeasonTheme";
 import { SEASON_NAMES } from "@/lib/season";
 import type { Vlog, Word, WordProgress } from "@/lib/types";
@@ -121,6 +122,7 @@ export default function VlogPage() {
   }, [tab, mode, vlog]);
 
   const current = queue[pos];
+  const curPos = current?.word.pos ? formatPos(current.word.pos) : null;
 
   function changeMode(m: Mode) {
     setMode(m);
@@ -256,6 +258,11 @@ export default function VlogPage() {
                   <div className="flex items-baseline gap-2 flex-wrap">
                     <span className="text-xl font-semibold text-ink">{lookup.word.word}</span>
                     {lookup.word.phonetic && <span className="text-muted">/{lookup.word.phonetic}/</span>}
+                    {lookup.word.pos && formatPos(lookup.word.pos) && (
+                      <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs">
+                        {formatPos(lookup.word.pos)}
+                      </span>
+                    )}
                     <button
                       onClick={() => speak(lookup.word!.word)}
                       className="ml-auto w-9 h-9 rounded-full bg-accent/10 text-accent text-base hover:bg-accent/20"
@@ -336,6 +343,11 @@ export default function VlogPage() {
                         <>
                           <h2 className="text-3xl font-semibold text-ink">{current.word.word}</h2>
                           {current.word.phonetic && <span className="text-muted text-lg">/{current.word.phonetic}/</span>}
+                          {curPos && (
+                            <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs">
+                              {curPos}
+                            </span>
+                          )}
                           <button
                             onClick={() => speak(current.word.word)}
                             className="ml-auto w-10 h-10 rounded-full bg-accent/10 text-accent text-lg hover:bg-accent/20"
@@ -378,6 +390,11 @@ export default function VlogPage() {
                     <div className="flex items-baseline gap-3 flex-wrap">
                       <h2 className="text-3xl font-semibold text-ink">{current.word.word}</h2>
                       {revealed && current.word.phonetic && <span className="text-muted text-lg">/{current.word.phonetic}/</span>}
+                      {revealed && curPos && (
+                        <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs">
+                          {curPos}
+                        </span>
+                      )}
                       <button
                         onClick={() => speak(current.word.word)}
                         className="ml-auto w-10 h-10 rounded-full bg-accent/10 text-accent text-lg hover:bg-accent/20"

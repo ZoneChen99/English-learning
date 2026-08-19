@@ -25,6 +25,7 @@
   .lookup{position:sticky;bottom:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
   .lookup h3{font-size:20px;font-weight:600}
   .lookup .ph{color:var(--muted);font-size:16px;margin-left:8px}
+  .lookup .pos{display:inline-block;font-size:12px;padding:2px 10px;border-radius:999px;background:color-mix(in oklab,var(--accent) 10%,transparent);color:var(--accent);margin-left:8px;vertical-align:middle}
   .lookup .tr{margin-top:6px;color:var(--ink)}
   .lookup button{margin-top:10px;padding:8px 18px;border-radius:999px;background:var(--accent);color:#fff;border:none;font-size:14px;cursor:pointer}
   .seg{display:inline-block;font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;margin:0 4px 12px 0}
@@ -62,13 +63,13 @@ const VLOG = {
     {en:"At night, the Bird's Nest Stadium glows with colorful lights.", zh:"夜晚，鸟巢体育场在彩灯映照下闪闪发光。"}
   ]
 };
-// 演示用迷你词库（仅聚焦词）
+// 演示用迷你词库（仅聚焦词）：[音标, 释义, 词性]
 const DICT = {
-  hotel:["/həʊˈtel/","酒店；旅馆"], stadium:["/ˈsteɪdiəm/","体育场；运动场"], smooth:["/smuːð/","光滑的；平稳的"],
-  restaurant:["/ˈrestrɒnt/","餐馆；餐厅"], imperial:["/ɪmˈpɪəriəl/","帝国的；皇帝的"], security:["/sɪˈkjʊərəti/","安全；保安"],
-  phone:["/fəʊn/","电话；手机"], electric:["/ɪˈlektrɪk/","电的；电动的"], great:["/ɡreɪt/","伟大的；巨大的"],
-  steep:["/stiːp/","陡峭的"], absolutely:["/ˈæbsəluːtli/","绝对地；完全地"], interesting:["/ˈɪntrəstɪŋ/","有趣的"],
-  mesmerizing:["/ˈmezməraɪzɪŋ/","迷人的；令人陶醉的"], painting:["/ˈpeɪntɪŋ/","绘画；油画"], colorful:["/ˈkʌləfl/","多彩的；鲜艳的"]
+  hotel:["/həʊˈtel/","酒店；旅馆","名词"], stadium:["/ˈsteɪdiəm/","体育场；运动场","名词"], smooth:["/smuːð/","光滑的；平稳的","形容词"],
+  restaurant:["/ˈrestrɒnt/","餐馆；餐厅","名词"], imperial:["/ɪmˈpɪəriəl/","帝国的；皇帝的","形容词"], security:["/sɪˈkjʊərəti/","安全；保安","名词"],
+  phone:["/fəʊn/","电话；手机","名词"], electric:["/ɪˈlektrɪk/","电的；电动的","形容词"], great:["/ɡreɪt/","伟大的；巨大的","形容词"],
+  steep:["/stiːp/","陡峭的","形容词"], absolutely:["/ˈæbsəluːtli/","绝对地；完全地","副词"], interesting:["/ˈɪntrəstɪŋ/","有趣的","形容词"],
+  mesmerizing:["/ˈmezməraɪzɪŋ/","迷人的；令人陶醉的","形容词"], painting:["/ˈpeɪntɪŋ/","绘画；油画","名词"], colorful:["/ˈkʌləfl/","多彩的；鲜艳的","形容词"]
 };
 const FOCUS = ["stadium","smooth","restaurant","imperial","security","phone","electric","great","steep","absolutely","interesting","stadium"];
 
@@ -91,7 +92,7 @@ function renderTranscript(app){
   html+=`</section>`;
   if(lookup){
     const d=DICT[lookup.toLowerCase()];
-    html+=`<div class="lookup">`+(d?`<h3>${lookup}<span class="ph">${d[0]}</span></h3><p class="tr">${d[1]}</p><button onclick="alert('已加入生词本（演示）')">加入生词本</button>`:`<p class="tr">「${lookup}」词库未收录。</p>`)+`</div>`;
+    html+=`<div class="lookup">`+(d?`<h3>${lookup}<span class="ph">${d[0]}</span><span class="pos">${d[2]}</span></h3><p class="tr">${d[1]}</p><button onclick="alert('已加入生词本（演示）')">加入生词本</button>`:`<p class="tr">「${lookup}」词库未收录。</p>`)+`</div>`;
   }
   app.innerHTML=html;
 }
@@ -102,11 +103,17 @@ function renderReview(app){
   const useSent = MODE==="mixed" ? (pos%2===0) : (MODE==="sentence");
   const seg=`<div class="tabs"><span class="tab" onclick="setTab('transcript')">文稿阅读</span><span class="tab on" onclick="setTab('review')">三模式复习</span></div>`;
   let body;
+  const d = DICT[fw] || ["", "", ""];
   if(useSent){
     const masked = revealed ? s.en.replace(new RegExp("\\b"+fw+"\\b","i"),m=>`<mark>${m}</mark>`) : s.en.replace(new RegExp("\\b"+fw+"\\b","i"),'<span class="mask">＿＿＿＿</span>');
-    body=`<p class="hint">在句子里把单词「捡」回来——先想，再揭晓。</p><div class="card"><p class="en">${masked}</p>${revealed?`<div class="tr" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">${DICT[fw]?DICT[fw][1]:""}</div>`:""}</div>`;
+    body=`<p class="hint">在句子里把单词「捡」回来——先想，再揭晓。</p><div class="card"><p class="en">${masked}</p>`
+      + (revealed?`<div style="margin-top:12px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><h3 style="font-size:26px">${fw}</h3>${d[0]?`<span class="ph">${d[0]}</span>`:""}${d[2]?`<span class="pos">${d[2]}</span>`:""}</div><div class="tr" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">${d[1]}</div>`:"")
+      + `</div>`;
   } else {
-    body=`<p class="hint">看着单词回想它的意思——先想，再揭晓。</p><div class="card"><h3 style="font-size:26px">${fw}${revealed?`<span class="ph">${DICT[fw]?DICT[fw][0]:""}</span>`:""}</h3>${revealed?`<div class="tr" style="margin-top:12px">${DICT[fw]?DICT[fw][1]:""}</div><div class="tr" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px;color:var(--muted)">${s.en}<br>${s.zh}</div>`:`<p class="tr" style="margin-top:12px;color:var(--muted)">这个单词是什么意思？</p>`}</div>`;
+    body=`<p class="hint">看着单词回想它的意思——先想，再揭晓。</p><div class="card">`
+      + `<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><h3 style="font-size:26px">${fw}</h3>${revealed&&d[0]?`<span class="ph">${d[0]}</span>`:""}${revealed&&d[2]?`<span class="pos">${d[2]}</span>`:""}</div>`
+      + (revealed?`<div class="tr" style="margin-top:12px">${d[1]}</div><div class="tr" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px;color:var(--muted)">${s.en}<br>${s.zh}</div>`:`<p class="tr" style="margin-top:12px;color:var(--muted)">这个单词是什么意思？</p>`)
+      + `</div>`;
   }
   const controls = revealed
     ? `<div class="g3"><button class="b2" onclick="rate('again')">没想起</button><button class="b2 soft" onclick="rate('good')">有点印象</button><button class="b2 solid" onclick="rate('easy')">想起来了</button></div>`

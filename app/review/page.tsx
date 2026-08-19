@@ -6,6 +6,7 @@ import { getAllProgress, updateProgress } from "@/lib/db";
 import { fetchBook } from "@/lib/books";
 import { applyReview, type Grade } from "@/lib/sr";
 import { speak, warmupVoices } from "@/lib/audio";
+import { formatPos } from "@/lib/pos";
 import { useSeason } from "@/components/SeasonTheme";
 import { SEASON_NAMES } from "@/lib/season";
 import type { Word, WordBook, WordProgress } from "@/lib/types";
@@ -247,6 +248,7 @@ export default function ReviewHome() {
 
   const useSentence = current.useSentence;
   const example = current.word.examples?.[0];
+  const curPos = current.word.pos ? formatPos(current.word.pos) : null;
 
   return (
     <main className="min-h-screen w-full bg-bg">
@@ -290,6 +292,11 @@ export default function ReviewHome() {
                     <h2 className="text-3xl font-semibold text-ink">{current.word.word}</h2>
                     {current.word.phonetic && (
                       <span className="text-muted text-lg">/{current.word.phonetic}/</span>
+                    )}
+                    {curPos && (
+                      <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs">
+                        {curPos}
+                      </span>
                     )}
                     <button
                       onClick={() => speak(current.word.word)}
@@ -359,6 +366,11 @@ export default function ReviewHome() {
                 <h2 className="text-3xl font-semibold text-ink">{current.word.word}</h2>
                 {revealed && current.word.phonetic && (
                   <span className="text-muted text-lg">/{current.word.phonetic}/</span>
+                )}
+                {revealed && curPos && (
+                  <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs">
+                    {curPos}
+                  </span>
                 )}
                 <button
                   onClick={() => speak(current.word.word)}

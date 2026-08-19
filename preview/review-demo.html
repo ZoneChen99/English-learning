@@ -28,6 +28,7 @@
   .wordrow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   h2{font-size:30px;font-weight:600}
   .ph{color:var(--muted);font-size:18px}
+  .pos{display:inline-block;font-size:12px;padding:2px 10px;border-radius:999px;background:color-mix(in oklab,var(--accent) 10%,transparent);color:var(--accent);margin-left:8px;vertical-align:middle}
   .speak{margin-left:auto;width:40px;height:40px;border-radius:50%;
     background:color-mix(in oklab,var(--accent) 10%,transparent);color:var(--accent);border:none;font-size:18px;cursor:pointer}
   .speak:hover{background:color-mix(in oklab,var(--accent) 20%,transparent)}
@@ -63,11 +64,11 @@
 <script>
 // 真实词库摘录（cet4），高保真还原
 const RAW = [
-  { word:"abruptly", phonetic:"əˈbrʌptli", translation:"突然地；唐突地", en:"He left the meeting abruptly.", zh:"他突然离开了会议。" },
-  { word:"accumulate", phonetic:"əˈkjuːmjəleɪt", translation:"积累；积聚", en:"Dust can accumulate in the corners of the room.", zh:"灰尘会在房间角落里积聚。" },
-  { word:"adequate", phonetic:"ˈædɪkwət", translation:"足够的；适当的", en:"The food we brought was adequate for the trip.", zh:"我们带的食物足够这次旅行。" },
-  { word:"ambiguous", phonetic:"æmˈbɪɡjuəs", translation:"模棱两可的；含糊不清的", en:"His answer to the question was ambiguous.", zh:"他对这个问题的回答含糊不清。" },
-  { word:"anticipate", phonetic:"ænˈtɪsɪpeɪt", translation:"预期；预料；期待", en:"We anticipate a rise in prices next month.", zh:"我们预料下个月价格会上涨。" },
+  { word:"abruptly", phonetic:"əˈbrʌptli", translation:"突然地；唐突地", pos:"副词", en:"He left the meeting abruptly.", zh:"他突然离开了会议。" },
+  { word:"accumulate", phonetic:"əˈkjuːmjəleɪt", translation:"积累；积聚", pos:"动词", en:"Dust can accumulate in the corners of the room.", zh:"灰尘会在房间角落里积聚。" },
+  { word:"adequate", phonetic:"ˈædɪkwət", translation:"足够的；适当的", pos:"形容词", en:"The food we brought was adequate for the trip.", zh:"我们带的食物足够这次旅行。" },
+  { word:"ambiguous", phonetic:"æmˈbɪɡjuəs", translation:"模棱两可的；含糊不清的", pos:"形容词", en:"His answer to the question was ambiguous.", zh:"他对这个问题的回答含糊不清。" },
+  { word:"anticipate", phonetic:"ænˈtɪsɪpeɪt", translation:"预期；预料；期待", pos:"动词", en:"We anticipate a rise in prices next month.", zh:"我们预料下个月价格会上涨。" },
 ];
 
 // 构建带「本张呈现方式」的卡片
@@ -112,7 +113,7 @@ function render(){
     app.innerHTML = seg+head+`<section>
       <p class="sub">在句子里把单词「捡」回来——先想，再揭晓。</p>
       <div class="card">
-        <div class="wordrow">${revealed?`<h2>${c.word}</h2><span class="ph">/${c.phonetic}/</span>
+        <div class="wordrow">${revealed?`<h2>${c.word}</h2><span class="ph">/${c.phonetic}/</span><span class="pos">${c.pos}</span>
           <button class="speak" onclick="speak('${c.word}')">🔊</button>`:''}</div>
         <p class="sentence">${mask(c.en,c.word,revealed)}</p>
         ${revealed?`<p class="zh">${c.zh}</p><div class="trans">${c.translation}</div>`:''}
@@ -129,7 +130,7 @@ function render(){
       <p class="sub">看着单词回想它的意思——先想，再揭晓。</p>
       <div class="card">
         <div class="wordrow"><h2>${c.word}</h2>
-          ${revealed?`<span class="ph">/${c.phonetic}/</span>`:''}
+          ${revealed?`<span class="ph">/${c.phonetic}/</span><span class="pos">${c.pos}</span>`:''}
           <button class="speak" onclick="speak('${c.word}')">🔊</button></div>
         ${!revealed?`<p class="sentence" style="color:var(--muted)">这个单词是什么意思？</p>`
           :`<div class="trans" style="margin-top:20px;border:0;padding:0">${c.translation}</div>
