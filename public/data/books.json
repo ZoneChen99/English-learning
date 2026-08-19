@@ -1,5 +1,23 @@
 [
   {
+    "id": "junior",
+    "name": "初中英语",
+    "short": "初中",
+    "count": 1987
+  },
+  {
+    "id": "senior",
+    "name": "高中英语",
+    "short": "高中",
+    "count": 3743
+  },
+  {
+    "id": "cet4-hf",
+    "name": "四级高频",
+    "short": "高频",
+    "count": 600
+  },
+  {
     "id": "cet4",
     "name": "英语四级",
     "short": "CET-4",
@@ -28,5 +46,11 @@
     "name": "雅思",
     "short": "IELTS",
     "count": 5275
+  },
+  {
+    "id": "sat",
+    "name": "SAT 词汇",
+    "short": "SAT",
+    "count": 4464
   }
 ]

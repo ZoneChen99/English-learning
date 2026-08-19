@@ -1,24 +1,37 @@
-# 词库生成器（Python 版）：解析 KyleBing 正序 TSV，输出前端词书 JSON。
+# 词库生成器：解析 KyleBing TSV + JSON，输出前端词书 JSON。
 # 运行：python scripts/build_wordlists.py   （在 D:/work/English learning 目录下）
 import json
 import os
+import re
 
 ROOT = os.getcwd()
-SRC_DIR = os.path.join(ROOT, ".src", "cet", "tsv")  # ASCII 命名副本
+TSV_DIR = os.path.join(ROOT, ".src", "cet", "tsv")
+JSON_DIR = os.path.join(ROOT, ".src", "cet", "json")
 OUT = os.path.join(ROOT, "public", "data")
 os.makedirs(OUT, exist_ok=True)
 
-# (id, 名称, 简称, 源文件名)
-BOOKS = [
+# TSV 词书（含音标/例句/真题，数据最富）
+TSV_BOOKS = [
     ("cet4", "英语四级", "CET-4", "cet4.tsv"),
     ("cet6", "英语六级", "CET-6", "cet6.tsv"),
     ("ky", "考研英语", "考研", "ky.tsv"),
     ("toefl", "托福", "TOEFL", "toefl.tsv"),
     ("ielts", "雅思", "IELTS", "ielts.tsv"),
 ]
+# JSON 词书（词+释义+短语，无音标例句 → 用 TSV 字典富化）
+JSON_BOOKS = [
+    ("junior", "初中英语", "初中", "1-初中-顺序.json"),
+    ("senior", "高中英语", "高中", "2-高中-顺序.json"),
+    ("sat", "SAT 词汇", "SAT", "7-SAT-顺序.json"),
+]
+HF_COUNT = 600  # 四级高频取前 N（按真题出现次数）
 
-SEP_SENSE = "¦"  # 分隔多个义项/例句（broken bar）
+SEP_SENSE = "¦"
 SEP_KV = "::"
+EXAM_RE = re.compile(r"CET-?4", re.IGNORECASE)
+
+# 词书展示顺序（首页/词书列表排列）
+DISPLAY_ORDER = ["junior", "senior", "cet4-hf", "cet4", "cet6", "ky", "toefl", "ielts", "sat"]
 
 
 def parse_senses(field):
@@ -61,9 +74,8 @@ def parse_line(line):
     uk = (cols[1] or "").split(";")[0].strip()
     phonetic = uk or (cols[2] or "").strip()
     s3 = parse_senses(cols[3])
-    s6 = parse_senses(cols[6])
+    s6 = parse_senses(cols[6]) if len(cols) > 6 else []
     pos = s3[0]["pos"] if s3 else (s6[0]["pos"] if s6 else "")
-    # 按「；」拆细各义项再做整体去重，避免重复释义
     cn = []
     for s in s3 + s6:
         for part in s["cn"].split("；"):
@@ -89,40 +101,125 @@ def parse_line(line):
     }
 
 
+def load_tsv(path):
+    """返回 (entries, raw_lines)，raw_lines[i] 与 entries[i] 一一对应（用于真题频次统计）"""
+    entries, raws = [], []
+    seen = set()
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    for line in text.split("\n"):
+        if not line.strip():
+            continue
+        w = parse_line(line)
+        if not w:
+            continue
+        k = w["word"].lower()
+        if k in seen:
+            continue
+        seen.add(k)
+        entries.append(w)
+        raws.append(line)
+    return entries, raws
+
+
+def write_book(bid, name, short, words):
+    payload = {"id": bid, "name": name, "short": short, "count": len(words), "words": words}
+    with open(os.path.join(OUT, f"{bid}.json"), "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False)
+    return {"id": bid, "name": name, "short": short, "count": len(words)}
+
+
 def main():
-    manifest = []
-    index = {}  # lowerWord -> bookId（首见词书，用于文稿点词/复习定位）
-    for bid, name, short, fname in BOOKS:
-        src = os.path.join(SRC_DIR, fname)
+    meta = {}  # bid -> manifest item
+    index = {}  # lowerWord -> bookId（首见词书）
+    combined = {}  # lowerWord -> 富化词条（来自 5 本 TSV）
+
+    # 1) TSV 词书（数据最富，优先入索引/富化字典）
+    tsv_entries = {}  # bid -> entries
+    for bid, name, short, fname in TSV_BOOKS:
+        src = os.path.join(TSV_DIR, fname)
+        if not os.path.exists(src):
+            print(f"[skip] 找不到源文件：{src}")
+            continue
+        entries, _raws = load_tsv(src)
+        tsv_entries[bid] = entries
+        meta[bid] = write_book(bid, name, short, entries)
+        for w in entries:
+            k = w["word"].lower()
+            if k not in combined:
+                combined[k] = w
+            if k not in index:
+                index[k] = bid
+        print(f"[write] {bid}.json -> {len(entries)} 词")
+
+    # 2) 四级高频：按真题出现次数排序取前 N（cet4 TSV 含 'CET4' 真题引用）
+    if "cet4" in tsv_entries:
+        src = os.path.join(TSV_DIR, "cet4.tsv")
+        entries, raws = load_tsv(src)
+        ranked = sorted(zip(entries, raws), key=lambda er: -len(EXAM_RE.findall(er[1])))
+        hf = [e for e, _r in ranked[:HF_COUNT]]
+        meta["cet4-hf"] = write_book("cet4-hf", "四级高频", "高频", hf)
+        # 这些词已在 cet4 索引中，不重复写入
+        print(f"[write] cet4-hf.json -> {len(hf)} 词（按真题频次）")
+
+    # 3) JSON 词书（初中/高中/SAT），用 combined 富化音标/例句/释义
+    for bid, name, short, fname in JSON_BOOKS:
+        src = os.path.join(JSON_DIR, fname)
         if not os.path.exists(src):
             print(f"[skip] 找不到源文件：{src}")
             continue
         with open(src, encoding="utf-8") as f:
-            text = f.read()
-        seen = set()
+            arr = json.load(f)
         words = []
-        skipped = 0
-        for line in text.split("\n"):
-            if not line.strip():
-                continue
-            w = parse_line(line)
+        seen = set()
+        enriched = 0
+        for item in arr:
+            w = (item.get("word") or "").strip()
             if not w:
-                skipped += 1
                 continue
-            key = w["word"].lower()
-            if key in seen:
+            k = w.lower()
+            if k in seen:
                 continue
-            seen.add(key)
-            words.append(w)
-        payload = {"id": bid, "name": name, "short": short, "count": len(words), "words": words}
-        with open(os.path.join(OUT, f"{bid}.json"), "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False)
+            seen.add(k)
+            trs = item.get("translations") or []
+            pos = (trs[0].get("type") or "").strip() if trs else ""
+            cn = "；".join(
+                dict.fromkeys(
+                    t.get("translation", "").strip()
+                    for t in trs
+                    if t.get("translation", "").strip()
+                )
+            )
+            base = combined.get(k)
+            if base:
+                entry = {
+                    "word": w,
+                    "phonetic": base["phonetic"],
+                    "pos": base["pos"] or pos,
+                    "definition": base["definition"],
+                    "translation": base["translation"] or cn,
+                    "examples": base["examples"],
+                }
+                enriched += 1
+            else:
+                entry = {
+                    "word": w,
+                    "phonetic": "",
+                    "pos": pos,
+                    "definition": "",
+                    "translation": cn,
+                    "examples": None,
+                }
+            words.append(entry)
+        meta[bid] = write_book(bid, name, short, words)
         for w in words:
             k = w["word"].lower()
             if k not in index:
                 index[k] = bid
-        manifest.append({"id": bid, "name": name, "short": short, "count": len(words)})
-        print(f"[write] {bid}.json -> {len(words)} 词（跳过 {skipped} 行）")
+        print(f"[write] {bid}.json -> {len(words)} 词（富化 {enriched}）")
+
+    # 4) manifest 按展示顺序输出
+    manifest = [meta[b] for b in DISPLAY_ORDER if b in meta]
     with open(os.path.join(OUT, "books.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)
     with open(os.path.join(OUT, "words-index.json"), "w", encoding="utf-8") as f:
