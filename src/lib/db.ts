@@ -91,3 +91,8 @@ export async function getBookProgress(bookId: string): Promise<WordProgress[]> {
 export async function getProgress(word: string, bookId: string): Promise<WordProgress | undefined> {
   return db.progress.get(word.toLowerCase());
 }
+
+/** 取全部学习进度（跨词书），用于复习模块汇总待复习单词 */
+export async function getAllProgress(): Promise<WordProgress[]> {
+  return db.progress.toArray();
+}

@@ -24,9 +24,9 @@ const MODULES = [
   {
     key: "review",
     title: "复习",
-    desc: "用文章与影视片段，在语境里把单词捡回来。",
-    href: null,
-    ready: false,
+    desc: "在例句语境里把单词捡回来，记得更牢。",
+    href: "/review",
+    ready: true,
   },
   {
     key: "film",
