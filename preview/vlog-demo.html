@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vlog 文稿复习 · 预览</title>
+<style>
+  :root{ --bg:#fbfbf7; --surface:#fff; --ink:#2f3a34; --muted:#8a938c; --accent:#7cb97f; --line:rgba(0,0,0,.05); }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.6}
+  .min-h{min-height:100vh;width:100%}
+  header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px}
+  .back{font-size:14px;color:var(--muted);text-decoration:none}
+  .pill{font-size:14px;color:var(--muted)}
+  .tabs{display:flex;gap:8px;justify-content:center;margin:8px 0 4px}
+  .tab{font-size:14px;padding:8px 18px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+  .tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  section{max-width:680px;margin:0 auto;padding:16px 24px 24px}
+  .hint{font-size:14px;color:var(--muted);margin-bottom:16px}
+  .card{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .en{font-size:18px;color:color-mix(in oklab,var(--ink) 90%,transparent)}
+  .en button{color:color-mix(in oklab,var(--accent) 90%,transparent);background:none;border:none;cursor:pointer;font:inherit;padding:0 1px;border-radius:3px}
+  .en button:hover{background:color-mix(in oklab,var(--accent) 12%,transparent);color:var(--accent)}
+  .zh{margin-top:6px;font-size:14px;color:var(--muted)}
+  .lookup{position:sticky;bottom:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+  .lookup h3{font-size:20px;font-weight:600}
+  .lookup .ph{color:var(--muted);font-size:16px;margin-left:8px}
+  .lookup .tr{margin-top:6px;color:var(--ink)}
+  .lookup button{margin-top:10px;padding:8px 18px;border-radius:999px;background:var(--accent);color:#fff;border:none;font-size:14px;cursor:pointer}
+  .seg{display:inline-block;font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;margin:0 4px 12px 0}
+  .seg.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .cnt{font-size:12px;color:var(--muted);float:right}
+  .mask{display:inline-block;min-width:3.5rem;border-bottom:2px solid color-mix(in oklab,var(--accent) 60%,transparent);text-align:center;color:color-mix(in oklab,var(--accent) 70%,transparent);user-select:none;letter-spacing:2px}
+  mark{background:color-mix(in oklab,var(--accent) 20%,transparent);color:var(--ink);border-radius:4px;padding:0 2px}
+  .btn{margin-top:20px;width:100%;padding:13px;border-radius:16px;border:none;background:var(--accent);color:#fff;font-size:14px;cursor:pointer}
+  .btn:hover{opacity:.9}
+  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+  .b2{padding:13px;border-radius:16px;font-size:14px;cursor:pointer;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+  .b2.soft{background:color-mix(in oklab,var(--accent) 10%,transparent);color:var(--accent);border:none}
+  .b2.solid{background:var(--accent);color:#fff;border:none}
+  .center{text-align:center;padding:80px 24px}
+  .center .e{font-size:48px}.center h1{margin-top:16px;font-size:24px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="min-h" id="app"></div>
+<script>
+const VLOG = {
+  title:"北京初体验：长城、故宫与烤鸭",
+  sentences:[
+    {en:"The hotel room was amazing, with a clear view of the Bird's Nest Stadium.", zh:"酒店房间太棒了，能清楚看到鸟巢体育场。"},
+    {en:"Beijing is a very neat and clean city, and the roads are smooth.", zh:"北京非常整洁干净，道路也很平整。"},
+    {en:"We went to a famous restaurant to try the Peking duck.", zh:"我们去了一家有名的餐厅品尝北京烤鸭。"},
+    {en:"The Forbidden City was the imperial palace of the Ming and Qing dynasties.", zh:"故宫是明清两代的皇宫。"},
+    {en:"Security at the entrance was very strict, so arrive a bit early.", zh:"入口处安检非常严格，所以最好早到一点。"},
+    {en:"You can rent a bike by scanning a QR code on your phone.", zh:"你可以用手机扫二维码租一辆自行车。"},
+    {en:"China promotes electric vehicles a lot; even the public buses are fully electric.", zh:"中国大力推广电动汽车，连公交车都是纯电动的。"},
+    {en:"The Great Wall is about 21,000 kilometers long and was built to keep enemies out.", zh:"长城长约两万一千公里，修建目的是抵御外敌。"},
+    {en:"The stairs were very steep, and I needed to sit down to rest.", zh:"台阶非常陡，我得坐下来休息。"},
+    {en:"The view from the top was absolutely mesmerizing.", zh:"从山顶看到的景色令人陶醉。"},
+    {en:"An artist was painting with the palm of his hand — truly interesting!", zh:"一位画家正用手掌作画，真有意思！"},
+    {en:"At night, the Bird's Nest Stadium glows with colorful lights.", zh:"夜晚，鸟巢体育场在彩灯映照下闪闪发光。"}
+  ]
+};
+// 演示用迷你词库（仅聚焦词）
+const DICT = {
+  hotel:["/həʊˈtel/","酒店；旅馆"], stadium:["/ˈsteɪdiəm/","体育场；运动场"], smooth:["/smuːð/","光滑的；平稳的"],
+  restaurant:["/ˈrestrɒnt/","餐馆；餐厅"], imperial:["/ɪmˈpɪəriəl/","帝国的；皇帝的"], security:["/sɪˈkjʊərəti/","安全；保安"],
+  phone:["/fəʊn/","电话；手机"], electric:["/ɪˈlektrɪk/","电的；电动的"], great:["/ɡreɪt/","伟大的；巨大的"],
+  steep:["/stiːp/","陡峭的"], absolutely:["/ˈæbsəluːtli/","绝对地；完全地"], interesting:["/ˈɪntrəstɪŋ/","有趣的"],
+  mesmerizing:["/ˈmezməraɪzɪŋ/","迷人的；令人陶醉的"], painting:["/ˈpeɪntɪŋ/","绘画；油画"], colorful:["/ˈkʌləfl/","多彩的；鲜艳的"]
+};
+const FOCUS = ["stadium","smooth","restaurant","imperial","security","phone","electric","great","steep","absolutely","interesting","stadium"];
+
+let TAB="transcript", MODE="sentence", pos=0, revealed=false, lookup=null;
+const stats={recalled:0,fuzzy:0,forgot:0};
+
+function render(){
+  const app=document.getElementById('app');
+  if(TAB==="transcript") return renderTranscript(app);
+  return renderReview(app);
+}
+function renderTranscript(app){
+  let html=`<header><a class="back" href="#">← 返回列表</a><span class="pill">Vlog · ${VLOG.title}</span></header>
+  <div class="tabs"><span class="tab on" onclick="setTab('transcript')">文稿阅读</span><span class="tab" onclick="setTab('review')">三模式复习</span></div>
+  <section><p class="hint">点击任意英文单词即可查词释义，并「加入生词本」。</p>`;
+  VLOG.sentences.forEach((s,i)=>{
+    const parts=s.en.split(/([A-Za-z][A-Za-z'’-]*)/g).map(p=>/^[A-Za-z][A-Za-z'’-]*$/.test(p)?`<button onclick="lookupWord('${p}')">${p}</button>`:p).join('');
+    html+=`<div class="card"><p class="en">${parts}</p><p class="zh">${s.zh}</p></div>`;
+  });
+  html+=`</section>`;
+  if(lookup){
+    const d=DICT[lookup.toLowerCase()];
+    html+=`<div class="lookup">`+(d?`<h3>${lookup}<span class="ph">${d[0]}</span></h3><p class="tr">${d[1]}</p><button onclick="alert('已加入生词本（演示）')">加入生词本</button>`:`<p class="tr">「${lookup}」词库未收录。</p>`)+`</div>`;
+  }
+  app.innerHTML=html;
+}
+function lookupWord(w){ lookup=w; render(); }
+function renderReview(app){
+  if(pos>=VLOG.sentences.length){ app.innerHTML=`<header><a class="back" href="#">←</a></header><div class="center"><div class="e">🌿</div><h1>这一轮复习完成</h1><p>记得 ${stats.recalled} · 模糊 ${stats.fuzzy} · 忘了 ${stats.forgot}</p><button class="tab" style="margin-top:24px" onclick="restart()">再来一轮</button></div>`; return; }
+  const s=VLOG.sentences[pos]; const fw=FOCUS[pos];
+  const useSent = MODE==="mixed" ? (pos%2===0) : (MODE==="sentence");
+  const seg=`<div class="tabs"><span class="tab" onclick="setTab('transcript')">文稿阅读</span><span class="tab on" onclick="setTab('review')">三模式复习</span></div>`;
+  let body;
+  if(useSent){
+    const masked = revealed ? s.en.replace(new RegExp("\\b"+fw+"\\b","i"),m=>`<mark>${m}</mark>`) : s.en.replace(new RegExp("\\b"+fw+"\\b","i"),'<span class="mask">＿＿＿＿</span>');
+    body=`<p class="hint">在句子里把单词「捡」回来——先想，再揭晓。</p><div class="card"><p class="en">${masked}</p>${revealed?`<div class="tr" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">${DICT[fw]?DICT[fw][1]:""}</div>`:""}</div>`;
+  } else {
+    body=`<p class="hint">看着单词回想它的意思——先想，再揭晓。</p><div class="card"><h3 style="font-size:26px">${fw}${revealed?`<span class="ph">${DICT[fw]?DICT[fw][0]:""}</span>`:""}</h3>${revealed?`<div class="tr" style="margin-top:12px">${DICT[fw]?DICT[fw][1]:""}</div><div class="tr" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px;color:var(--muted)">${s.en}<br>${s.zh}</div>`:`<p class="tr" style="margin-top:12px;color:var(--muted)">这个单词是什么意思？</p>`}</div>`;
+  }
+  const controls = revealed
+    ? `<div class="g3"><button class="b2" onclick="rate('again')">没想起</button><button class="b2 soft" onclick="rate('good')">有点印象</button><button class="b2 solid" onclick="rate('easy')">想起来了</button></div>`
+    : `<button class="btn" onclick="reveal()">${useSent?'揭晓单词':'揭晓释义'}</button>`;
+  app.innerHTML=`<header><a class="back" href="#">← 返回列表</a><span class="pill">Vlog · ${VLOG.title}</span></header>${seg}
+    <section><span class="seg ${MODE==='sentence'?'on':''}" onclick="setMode('sentence')">句子模式</span><span class="seg ${MODE==='word'?'on':''}" onclick="setMode('word')">单词模式</span><span class="seg ${MODE==='mixed'?'on':''}" onclick="setMode('mixed')">混合模式</span><span class="cnt">${pos+1}/${VLOG.sentences.length}</span>
+    ${body}${controls}</section>`;
+}
+function reveal(){ revealed=true; render(); }
+function rate(g){ if(g==='easy')stats.recalled++; else if(g==='good')stats.fuzzy++; else stats.forgot++; revealed=false; pos++; render(); }
+function setTab(t){ TAB=t; if(t==='review'){pos=0;revealed=false;stats.recalled=stats.fuzzy=stats.forgot=0;} render(); }
+function setMode(m){ MODE=m; render(); }
+function restart(){ pos=0;revealed=false;stats.recalled=stats.fuzzy=stats.forgot=0; render(); }
+render();
+</script>
+</body>
+</html>

@@ -29,6 +29,13 @@ const MODULES = [
     ready: true,
   },
   {
+    key: "vlog",
+    title: "Vlog 复习",
+    desc: "读外国人中国行 vlog 文稿，点词即查、三模式复习。",
+    href: "/vlog",
+    ready: true,
+  },
+  {
     key: "film",
     title: "影视",
     desc: "边看边读整页字幕，点词即查即记。",
@@ -65,7 +72,7 @@ export default function Home() {
             {SEASON_GREETINGS[season]}
           </h1>
           <p className="mt-4 text-muted text-base sm:text-lg max-w-md leading-relaxed">
-            一个随季节变化的安静学习空间。先学单词，再在文章与影视里复习，让英语慢慢长进日常。
+            一个随季节变化的安静学习空间。先学单词，再在 vlog 与影视里复习，让英语慢慢长进日常。
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">

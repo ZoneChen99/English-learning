@@ -1,0 +1,23 @@
+[
+  {
+    "id": "beijing",
+    "title": "北京初体验：长城、故宫与烤鸭",
+    "author": "Travel Diaries",
+    "sourceUrl": "https://www.youtube.com/results?search_query=Beijing+travel+vlog+Great+Wall+Forbidden+City",
+    "count": 12
+  },
+  {
+    "id": "shanghai",
+    "title": "上海初印象：从机场到市中心",
+    "author": "Wander Abroad",
+    "sourceUrl": "https://www.youtube.com/results?search_query=first+time+Shanghai+China+vlog",
+    "count": 12
+  },
+  {
+    "id": "safe-china",
+    "title": "为什么在中国旅行如此安心",
+    "author": "Two Brits On The Go / Ingrid",
+    "sourceUrl": "https://www.youtube.com/results?search_query=foreigners+China+travel+safe+convenient",
+    "count": 12
+  }
+]

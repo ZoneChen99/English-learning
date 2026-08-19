@@ -32,6 +32,31 @@ export interface BookMeta {
 /** 学习状态机：新词 -> 学习中 -> 复习 -> 已掌握 */
 export type LearnStatus = "new" | "learning" | "review" | "mastered";
 
+/** Vlog 文稿中的单句（双语字幕） */
+export interface VlogSentence {
+  en: string; // 英文字幕
+  zh: string; // 中文字幕
+}
+
+/** 一篇带双语字幕的 vlog 转录文稿 */
+export interface Vlog {
+  id: string;
+  title: string; // 标题，如 "北京初体验：长城与故宫"
+  author: string; // 作者/频道
+  sourceUrl?: string; // 来源链接（可为搜索/视频页）
+  cover?: string; // 封面图（可选）
+  sentences: VlogSentence[];
+}
+
+/** vlog 清单条目（用于列表，不含 sentences 以减少体积） */
+export interface VlogMeta {
+  id: string;
+  title: string;
+  author: string;
+  sourceUrl?: string;
+  count: number; // 句子数
+}
+
 /** 单个单词的学习进度（存于 IndexedDB） */
 export interface WordProgress {
   word: string; // 主键（小写）

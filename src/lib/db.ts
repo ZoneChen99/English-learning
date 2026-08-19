@@ -96,3 +96,25 @@ export async function getProgress(word: string, bookId: string): Promise<WordPro
 export async function getAllProgress(): Promise<WordProgress[]> {
   return db.progress.toArray();
 }
+
+/** 把一个词加入生词本（若不存在），默认状态 new；已存在则不动 */
+export async function addWord(word: string, bookId: string): Promise<void> {
+  const key = word.toLowerCase();
+  const cur = await db.progress.get(key);
+  if (cur) return;
+  const now = Date.now();
+  await db.progress.put({
+    word: key,
+    bookId,
+    status: "new",
+    ease: 2.5,
+    interval: 0,
+    repetitions: 0,
+    dueDate: now,
+    lastReviewed: null,
+    correctCount: 0,
+    wrongCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  });
+}

@@ -91,6 +91,7 @@ def parse_line(line):
 
 def main():
     manifest = []
+    index = {}  # lowerWord -> bookId（首见词书，用于文稿点词/复习定位）
     for bid, name, short, fname in BOOKS:
         src = os.path.join(SRC_DIR, fname)
         if not os.path.exists(src):
@@ -116,10 +117,17 @@ def main():
         payload = {"id": bid, "name": name, "short": short, "count": len(words), "words": words}
         with open(os.path.join(OUT, f"{bid}.json"), "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False)
+        for w in words:
+            k = w["word"].lower()
+            if k not in index:
+                index[k] = bid
         manifest.append({"id": bid, "name": name, "short": short, "count": len(words)})
         print(f"[write] {bid}.json -> {len(words)} 词（跳过 {skipped} 行）")
     with open(os.path.join(OUT, "books.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)
+    with open(os.path.join(OUT, "words-index.json"), "w", encoding="utf-8") as f:
+        json.dump(index, f, ensure_ascii=False, sort_keys=True)
+    print(f"[write] words-index.json -> {len(index)} 词条")
     print("[done] " + ", ".join(f"{m['id']}({m['count']})" for m in manifest))
 
 
