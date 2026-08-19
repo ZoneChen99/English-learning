@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { fetchVlog } from "@/lib/vlogs";
 import { findFocusWord, findWord } from "@/lib/books";
+import VideoPlayer, { type VideoPlayerHandle } from "@/components/VideoPlayer";
+import SubtitleTrack from "@/components/SubtitleTrack";
 import { addWord, getProgress, updateProgress } from "@/lib/db";
 import { applyReview, type Grade } from "@/lib/sr";
 import { speak, warmupVoices } from "@/lib/audio";
@@ -79,6 +81,29 @@ export default function VlogPage() {
 
   // 点词查词状态
   const [lookup, setLookup] = useState<{ raw: string; word: Word | null; bookId?: string; saved?: boolean } | null>(null);
+
+  // Phase 4: 视频播放 + 字幕跟随
+  const playerRef = useRef<VideoPlayerHandle>(null);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [duration, setDuration] = useState(0);
+
+  function timeToIndex(t: number): number {
+    if (!vlog) return -1;
+    let idx = -1;
+    for (let i = 0; i < vlog.sentences.length; i++) {
+      const s = vlog.sentences[i];
+      if (typeof s.start === "number" && s.start <= t) idx = i;
+      else break;
+    }
+    return idx;
+  }
+  function handleTick(t: number) {
+    setActiveIndex(timeToIndex(t));
+  }
+  function handleSeek(_start: number, i: number) {
+    playerRef.current?.seekTo(_start);
+    setActiveIndex(i);
+  }
 
   useEffect(() => {
     const vid = new URLSearchParams(window.location.search).get("id") ?? window.location.pathname.split("/").pop() ?? "";
@@ -190,25 +215,6 @@ export default function VlogPage() {
     );
   }
 
-  // 把英文句子拆成「可点击单词 + 标点」片段
-  function renderClickable(en: string) {
-    const parts = en.split(/([A-Za-z][A-Za-z'’-]*)/g);
-    return parts.map((part, i) => {
-      if (/^[A-Za-z][A-Za-z'’-]*$/.test(part)) {
-        return (
-          <button
-            key={i}
-            onClick={() => onWordClick(part)}
-            className="text-accent/90 hover:bg-accent/10 hover:text-accent rounded px-0.5 transition"
-          >
-            {part}
-          </button>
-        );
-      }
-      return <span key={i}>{part}</span>;
-    });
-  }
-
   return (
     <main className="min-h-screen w-full bg-bg">
       <header className="flex items-center justify-between px-6 sm:px-10 py-4">
@@ -239,16 +245,24 @@ export default function VlogPage() {
       {tab === "transcript" ? (
         <section className="max-w-2xl mx-auto px-6 py-6">
           <p className="text-sm text-muted mb-4">
-            点击任意英文单词即可查词释义，并「加入生词本」。中文对照在每句下方。
+            点击任意英文单词即可查词释义，并「加入生词本」
+            {vlog.video ? "；点击字幕可跳转视频进度，当前句会随播放高亮。" : "。中文对照在每句下方。"}
           </p>
-          <div className="space-y-5">
-            {vlog.sentences.map((s, i) => (
-              <div key={i} className="bg-surface rounded-2xl p-5 border border-black/5 shadow-sm">
-                <p className="text-ink/90 leading-relaxed text-lg">{renderClickable(s.en)}</p>
-                <p className="mt-2 text-muted text-sm">{s.zh}</p>
-              </div>
-            ))}
-          </div>
+          {vlog.video && (
+            <VideoPlayer
+              ref={playerRef}
+              video={vlog.video}
+              onTick={handleTick}
+              onDuration={setDuration}
+              className="mb-5"
+            />
+          )}
+          <SubtitleTrack
+            sentences={vlog.sentences}
+            activeIndex={activeIndex}
+            onSeek={vlog.video ? handleSeek : undefined}
+            onWord={onWordClick}
+          />
 
           {/* 点词查词栏 */}
           {lookup && (

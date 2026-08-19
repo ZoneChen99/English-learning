@@ -4,17 +4,77 @@
   "author": "Wander Abroad",
   "sourceUrl": "https://www.youtube.com/results?search_query=first+time+Shanghai+China+vlog",
   "sentences": [
-    { "en": "Good morning, I'm in Shanghai, and I'm really excited to be here.", "zh": "早上好，我现在在上海，能来到这里真的很兴奋。" },
-    { "en": "China has been on my bucket list for a very long time.", "zh": "中国在我的愿望清单上已经很久了。" },
-    { "en": "After getting off the plane, there was fingerprinting and immigration.", "zh": "下飞机后进行了指纹采集和入境检查。" },
-    { "en": "I could pass the ticket gate with an Alipay QR code.", "zh": "我用支付宝的二维码就通过了检票口。" },
-    { "en": "The airport is ridiculously big, with huge and easy-to-read guide signs.", "zh": "机场大得离谱，指示牌巨大且一目了然。" },
-    { "en": "I felt comfortable on the train, and the city looked amazing.", "zh": "我在地铁上感觉很自在，城市看起来令人惊叹。" },
-    { "en": "My hotel room was bigger than I expected, and there was a bathtub.", "zh": "我的酒店房间比预期的大，还有浴缸。" },
-    { "en": "I thought about ordering dinner delivery, but it kept giving errors.", "zh": "我想点外卖，但它一直报错。" },
-    { "en": "So I ended up calling a taxi to eat at some random place.", "zh": "于是我最后叫了辆出租车去随便一家店吃饭。" },
-    { "en": "It was really cold, only seven degrees outside.", "zh": "外面真的很冷，只有七度。" },
-    { "en": "Public transport here is convenient and easy to follow.", "zh": "这里的公共交通很方便，也容易看懂。" },
-    { "en": "People were very friendly and always ready to help.", "zh": "人们非常友善，总是乐意帮忙。" }
+    {
+      "en": "Good morning, I'm in Shanghai, and I'm really excited to be here.",
+      "zh": "早上好，我现在在上海，能来到这里真的很兴奋。",
+      "start": 0.0,
+      "end": 6.0
+    },
+    {
+      "en": "China has been on my bucket list for a very long time.",
+      "zh": "中国在我的愿望清单上已经很久了。",
+      "start": 6.5,
+      "end": 12.5
+    },
+    {
+      "en": "After getting off the plane, there was fingerprinting and immigration.",
+      "zh": "下飞机后进行了指纹采集和入境检查。",
+      "start": 13.0,
+      "end": 19.0
+    },
+    {
+      "en": "I could pass the ticket gate with an Alipay QR code.",
+      "zh": "我用支付宝的二维码就通过了检票口。",
+      "start": 19.5,
+      "end": 25.5
+    },
+    {
+      "en": "The airport is ridiculously big, with huge and easy-to-read guide signs.",
+      "zh": "机场大得离谱，指示牌巨大且一目了然。",
+      "start": 26.0,
+      "end": 32.0
+    },
+    {
+      "en": "I felt comfortable on the train, and the city looked amazing.",
+      "zh": "我在地铁上感觉很自在，城市看起来令人惊叹。",
+      "start": 32.5,
+      "end": 38.5
+    },
+    {
+      "en": "My hotel room was bigger than I expected, and there was a bathtub.",
+      "zh": "我的酒店房间比预期的大，还有浴缸。",
+      "start": 39.0,
+      "end": 45.0
+    },
+    {
+      "en": "I thought about ordering dinner delivery, but it kept giving errors.",
+      "zh": "我想点外卖，但它一直报错。",
+      "start": 45.5,
+      "end": 51.5
+    },
+    {
+      "en": "So I ended up calling a taxi to eat at some random place.",
+      "zh": "于是我最后叫了辆出租车去随便一家店吃饭。",
+      "start": 52.0,
+      "end": 58.0
+    },
+    {
+      "en": "It was really cold, only seven degrees outside.",
+      "zh": "外面真的很冷，只有七度。",
+      "start": 58.5,
+      "end": 64.5
+    },
+    {
+      "en": "Public transport here is convenient and easy to follow.",
+      "zh": "这里的公共交通很方便，也容易看懂。",
+      "start": 65.0,
+      "end": 71.0
+    },
+    {
+      "en": "People were very friendly and always ready to help.",
+      "zh": "人们非常友善，总是乐意帮忙。",
+      "start": 71.5,
+      "end": 77.5
+    }
   ]
 }

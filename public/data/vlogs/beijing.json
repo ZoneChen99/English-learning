@@ -4,17 +4,81 @@
   "author": "Travel Diaries",
   "sourceUrl": "https://www.youtube.com/results?search_query=Beijing+travel+vlog+Great+Wall+Forbidden+City",
   "sentences": [
-    { "en": "The hotel room was amazing, with a clear view of the Bird's Nest Stadium.", "zh": "酒店房间太棒了，能清楚看到鸟巢体育场。" },
-    { "en": "Beijing is a very neat and clean city, and the roads are smooth.", "zh": "北京非常整洁干净，道路也很平整。" },
-    { "en": "We went to a famous restaurant to try the Peking duck.", "zh": "我们去了一家有名的餐厅品尝北京烤鸭。" },
-    { "en": "The Forbidden City was the imperial palace of the Ming and Qing dynasties.", "zh": "故宫是明清两代的皇宫。" },
-    { "en": "Security at the entrance was very strict, so arrive a bit early.", "zh": "入口处安检非常严格，所以最好早到一点。" },
-    { "en": "You can rent a bike by scanning a QR code on your phone.", "zh": "你可以用手机扫二维码租一辆自行车。" },
-    { "en": "China promotes electric vehicles a lot; even the public buses are fully electric.", "zh": "中国大力推广电动汽车，连公交车都是纯电动的。" },
-    { "en": "The Great Wall is about 21,000 kilometers long and was built to keep enemies out.", "zh": "长城长约两万一千公里，修建目的是抵御外敌。" },
-    { "en": "The stairs were very steep, and I needed to sit down to rest.", "zh": "台阶非常陡，我得坐下来休息。" },
-    { "en": "The view from the top was absolutely mesmerizing.", "zh": "从山顶看到的景色令人陶醉。" },
-    { "en": "An artist was painting with the palm of his hand — truly interesting!", "zh": "一位画家正用手掌作画，真有意思！" },
-    { "en": "At night, the Bird's Nest Stadium glows with colorful lights.", "zh": "夜晚，鸟巢体育场在彩灯映照下闪闪发光。" }
-  ]
+    {
+      "en": "The hotel room was amazing, with a clear view of the Bird's Nest Stadium.",
+      "zh": "酒店房间太棒了，能清楚看到鸟巢体育场。",
+      "start": 0.0,
+      "end": 6.0
+    },
+    {
+      "en": "Beijing is a very neat and clean city, and the roads are smooth.",
+      "zh": "北京非常整洁干净，道路也很平整。",
+      "start": 6.5,
+      "end": 12.5
+    },
+    {
+      "en": "We went to a famous restaurant to try the Peking duck.",
+      "zh": "我们去了一家有名的餐厅品尝北京烤鸭。",
+      "start": 13.0,
+      "end": 19.0
+    },
+    {
+      "en": "The Forbidden City was the imperial palace of the Ming and Qing dynasties.",
+      "zh": "故宫是明清两代的皇宫。",
+      "start": 19.5,
+      "end": 25.5
+    },
+    {
+      "en": "Security at the entrance was very strict, so arrive a bit early.",
+      "zh": "入口处安检非常严格，所以最好早到一点。",
+      "start": 26.0,
+      "end": 32.0
+    },
+    {
+      "en": "You can rent a bike by scanning a QR code on your phone.",
+      "zh": "你可以用手机扫二维码租一辆自行车。",
+      "start": 32.5,
+      "end": 38.5
+    },
+    {
+      "en": "China promotes electric vehicles a lot; even the public buses are fully electric.",
+      "zh": "中国大力推广电动汽车，连公交车都是纯电动的。",
+      "start": 39.0,
+      "end": 45.0
+    },
+    {
+      "en": "The Great Wall is about 21,000 kilometers long and was built to keep enemies out.",
+      "zh": "长城长约两万一千公里，修建目的是抵御外敌。",
+      "start": 45.5,
+      "end": 51.5
+    },
+    {
+      "en": "The stairs were very steep, and I needed to sit down to rest.",
+      "zh": "台阶非常陡，我得坐下来休息。",
+      "start": 52.0,
+      "end": 58.0
+    },
+    {
+      "en": "The view from the top was absolutely mesmerizing.",
+      "zh": "从山顶看到的景色令人陶醉。",
+      "start": 58.5,
+      "end": 64.5
+    },
+    {
+      "en": "An artist was painting with the palm of his hand — truly interesting!",
+      "zh": "一位画家正用手掌作画，真有意思！",
+      "start": 65.0,
+      "end": 71.0
+    },
+    {
+      "en": "At night, the Bird's Nest Stadium glows with colorful lights.",
+      "zh": "夜晚，鸟巢体育场在彩灯映照下闪闪发光。",
+      "start": 71.5,
+      "end": 77.5
+    }
+  ],
+  "video": {
+    "provider": "youtube",
+    "id": "aqz-KE-bpKQ"
+  }
 }

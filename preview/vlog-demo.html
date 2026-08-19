@@ -41,6 +41,22 @@
   .b2.solid{background:var(--accent);color:#fff;border:none}
   .center{text-align:center;padding:80px 24px}
   .center .e{font-size:48px}.center h1{margin-top:16px;font-size:24px;font-weight:600}
+  .player{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#2b3a34,#1f2a26);color:#fff;border-radius:16px;padding:14px 16px;margin-bottom:16px}
+  .playbtn{width:44px;height:44px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:14px;cursor:pointer;flex:none}
+  .pinfo{flex:1;min-width:0}
+  .ptitle{font-size:13px;opacity:.85;margin-bottom:6px}
+  .pbar{height:6px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden}
+  .pfill{height:100%;width:0;background:var(--accent);transition:width .25s linear}
+  .ptime{font-size:12px;opacity:.75;margin-top:4px}
+  .track{list-style:none;display:flex;flex-direction:column;gap:8px;padding:0;margin:0}
+  .tline{margin:0}
+  .tbtn{width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;transition:.15s;display:block}
+  .tbtn:hover{box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .tbtn.active{background:color-mix(in oklab,var(--accent) 10%,transparent);border-color:color-mix(in oklab,var(--accent) 40%,transparent)}
+  .ten{font-size:17px;color:color-mix(in oklab,var(--ink) 90%,transparent);line-height:1.6}
+  .ten button{color:color-mix(in oklab,var(--accent) 90%,transparent);background:none;border:none;cursor:pointer;font:inherit;padding:0 1px;border-radius:3px}
+  .ten button:hover{background:color-mix(in oklab,var(--accent) 12%,transparent);color:var(--accent)}
+  .tzh{display:block;margin-top:4px;font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -73,7 +89,31 @@ const DICT = {
 };
 const FOCUS = ["stadium","smooth","restaurant","imperial","security","phone","electric","great","steep","absolutely","interesting","stadium"];
 
+// Phase 4 演示：为句子生成模拟时间轴（每句 6s + 0.5s 间隔），驱动字幕跟随与跳转
+const TIMING = VLOG.sentences.map((_,i)=>({start:i*6.5, end:i*6.5+6}));
+const TOTAL = TIMING[TIMING.length-1].end;
+function timeToIndex(t){ let idx=-1; for(let i=0;i<TIMING.length;i++){ if(TIMING[i].start<=t) idx=i; else break; } return idx; }
+function fmt(s){ const m=Math.floor(s/60), ss=Math.floor(s%60); return m+":"+String(ss).padStart(2,'0'); }
+function syncPlayerUI(){
+  document.querySelectorAll('.tbtn').forEach(b=>{ const idx=+b.dataset.idx; b.classList.toggle('active', idx===activeIdx); });
+  const tcur=document.getElementById('tcur'); if(tcur) tcur.textContent=fmt(curT);
+  const fill=document.getElementById('pfill'); if(fill) fill.style.width=(TOTAL? (curT/TOTAL*100):0)+'%';
+}
+function ensureTimer(){
+  if(timer) return;
+  timer=setInterval(()=>{
+    if(!playing) return;
+    curT+=0.25;
+    if(curT>=TOTAL){ curT=TOTAL; playing=false; const pb=document.getElementById('playBtn'); if(pb) pb.textContent='▶'; }
+    activeIdx=timeToIndex(curT);
+    syncPlayerUI();
+  },250);
+}
+function togglePlay(){ playing=!playing; const pb=document.getElementById('playBtn'); if(pb) pb.textContent=playing?'❚❚':'▶'; ensureTimer(); }
+function seekTo(i){ curT=TIMING[i].start; activeIdx=i; syncPlayerUI(); }
+
 let TAB="transcript", MODE="sentence", pos=0, revealed=false, lookup=null;
+let playing=false, curT=0, activeIdx=-1, timer=null;
 const stats={recalled:0,fuzzy:0,forgot:0};
 
 function render(){
@@ -84,17 +124,26 @@ function render(){
 function renderTranscript(app){
   let html=`<header><a class="back" href="#">← 返回列表</a><span class="pill">Vlog · ${VLOG.title}</span></header>
   <div class="tabs"><span class="tab on" onclick="setTab('transcript')">文稿阅读</span><span class="tab" onclick="setTab('review')">三模式复习</span></div>
-  <section><p class="hint">点击任意英文单词即可查词释义，并「加入生词本」。</p>`;
+  <section><p class="hint">点击任意英文单词即可查词释义，并「加入生词本」；点击字幕可跳转进度，当前句随播放高亮（演示用模拟时间轴）。</p>`;
+  html+=`<div class="player">
+      <button class="playbtn" id="playBtn" onclick="togglePlay()">▶</button>
+      <div class="pinfo"><div class="ptitle">北京初体验（模拟视频 · 真实嵌入见应用）</div>
+      <div class="pbar"><div class="pfill" id="pfill"></div></div>
+      <div class="ptime"><span id="tcur">0:00</span> / <span>${fmt(TOTAL)}</span></div></div>
+    </div>`;
+  html+=`<ol class="track">`;
   VLOG.sentences.forEach((s,i)=>{
     const parts=s.en.split(/([A-Za-z][A-Za-z'’-]*)/g).map(p=>/^[A-Za-z][A-Za-z'’-]*$/.test(p)?`<button onclick="lookupWord('${p}')">${p}</button>`:p).join('');
-    html+=`<div class="card"><p class="en">${parts}</p><p class="zh">${s.zh}</p></div>`;
+    html+=`<li class="tline"><button class="tbtn" data-idx="${i}" data-start="${TIMING[i].start}" onclick="seekTo(${i})"><span class="ten">${parts}</span><span class="tzh">${s.zh}</span></button></li>`;
   });
-  html+=`</section>`;
+  html+=`</ol></section>`;
   if(lookup){
     const d=DICT[lookup.toLowerCase()];
     html+=`<div class="lookup">`+(d?`<h3>${lookup}<span class="ph">${d[0]}</span><span class="pos">${d[2]}</span></h3><p class="tr">${d[1]}</p><button onclick="alert('已加入生词本（演示）')">加入生词本</button>`:`<p class="tr">「${lookup}」词库未收录。</p>`)+`</div>`;
   }
   app.innerHTML=html;
+  syncPlayerUI();
+  ensureTimer();
 }
 function lookupWord(w){ lookup=w; render(); }
 function renderReview(app){

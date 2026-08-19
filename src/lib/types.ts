@@ -36,6 +36,14 @@ export type LearnStatus = "new" | "learning" | "review" | "mastered";
 export interface VlogSentence {
   en: string; // 英文字幕
   zh: string; // 中文字幕
+  start?: number; // 该行在视频中的起始时间（秒），用于字幕跟随与点句跳转
+  end?: number; // 该行结束时间（秒）
+}
+
+/** 视频嵌入引用：支持 YouTube / Bilibili 两种来源 */
+export interface VideoRef {
+  provider: "youtube" | "bilibili";
+  id: string; // YouTube 视频 ID 或 Bilibili BV 号
 }
 
 /** 一篇带双语字幕的 vlog 转录文稿 */
@@ -45,6 +53,7 @@ export interface Vlog {
   author: string; // 作者/频道
   sourceUrl?: string; // 来源链接（可为搜索/视频页）
   cover?: string; // 封面图（可选）
+  video?: VideoRef; // 可选：关联视频，缺省则仅提供文稿阅读
   sentences: VlogSentence[];
 }
 
