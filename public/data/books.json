@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cet4",
+    "name": "英语四级",
+    "short": "CET-4",
+    "count": 4544
+  },
+  {
+    "id": "cet6",
+    "name": "英语六级",
+    "short": "CET-6",
+    "count": 3991
+  },
+  {
+    "id": "ky",
+    "name": "考研英语",
+    "short": "考研",
+    "count": 5047
+  },
+  {
+    "id": "toefl",
+    "name": "托福",
+    "short": "TOEFL",
+    "count": 10367
+  },
+  {
+    "id": "ielts",
+    "name": "雅思",
+    "short": "IELTS",
+    "count": 5275
+  }
+]

@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "build:words": "python scripts/build_wordlists.py"
   },
   "dependencies": {
+    "dexie": "^4.4.5",
     "next": "^15.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* 默认季节配色（首屏 / SSR 兜底）。运行时由 SeasonTheme 用 JS 覆盖 <html> 上的同名变量。 */
 :root {
   --bg: #f7faf6;
   --surface: #ffffff;
@@ -8,6 +9,23 @@
   --accent: #7fb77e;
   --accent-soft: #e3f0e2;
   --deco: #f3c6d3;
+}
+
+/*
+ * 用 @theme inline 把语义色映射到 Tailwind 颜色令牌。
+ * inline 让生成的工具类直接引用 var(--accent) 等运行时变量，
+ * 因此 bg-accent / text-accent / border-accent / fill-deco 以及
+ * 透明度变体 bg-accent/10、bg-accent/20 都能正常工作，
+ * 且季节切换（JS 改写 --accent 等变量）可即时生效。
+ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-deco: var(--deco);
 }
 
 html,
@@ -25,15 +43,3 @@ body {
   transition: background-color 0.8s ease, color 0.8s ease;
   min-height: 100vh;
 }
-
-/* 语义化主题色（由 SeasonTheme 在 <html> 上动态覆盖） */
-.bg-bg { background-color: var(--bg); }
-.bg-surface { background-color: var(--surface); }
-.text-ink { color: var(--ink); }
-.text-muted { color: var(--muted); }
-.text-accent { color: var(--accent); }
-.bg-accent { background-color: var(--accent); }
-.bg-accent-soft { background-color: var(--accent-soft); }
-.border-accent { border-color: var(--accent); }
-.fill-accent { fill: var(--accent); }
-.fill-deco { fill: var(--deco); }

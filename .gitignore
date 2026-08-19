@@ -20,6 +20,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 dev.log
+build.log
 *.log
 
 # local env files (secrets!)
@@ -32,6 +33,10 @@ dev.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 原始词典数据（体积大，由脚本从仓库克隆生成，不入库）
+src/data/_raw/
+.src/
 
 # local databases / exported backups
 *.local.db

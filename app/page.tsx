@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useSeason } from "@/components/SeasonTheme";
 import { SeasonArt } from "@/components/SeasonArt";
 import {
@@ -17,18 +18,21 @@ const MODULES = [
     key: "learn",
     title: "学单词",
     desc: "按记忆规律每天推进，五步闭环记得更牢。",
-    ready: false,
+    href: "/learn",
+    ready: true,
   },
   {
     key: "review",
     title: "复习",
     desc: "用文章与影视片段，在语境里把单词捡回来。",
+    href: null,
     ready: false,
   },
   {
     key: "film",
     title: "影视",
     desc: "边看边读整页字幕，点词即查即记。",
+    href: null,
     ready: false,
   },
 ];
@@ -65,18 +69,29 @@ export default function Home() {
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            {MODULES.map((m) => (
-              <div
-                key={m.key}
-                className="bg-surface rounded-2xl p-5 border border-black/5 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="text-lg font-medium text-ink">{m.title}</div>
-                <p className="mt-2 text-sm text-muted leading-relaxed">{m.desc}</p>
-                <div className="mt-4 text-sm text-accent">
-                  {m.ready ? "进入 →" : "即将开放"}
+            {MODULES.map((m) => {
+              const inner = (
+                <>
+                  <div className="text-lg font-medium text-ink">{m.title}</div>
+                  <p className="mt-2 text-sm text-muted leading-relaxed">{m.desc}</p>
+                  <div className="mt-4 text-sm text-accent">
+                    {m.ready ? "进入 →" : "即将开放"}
+                  </div>
+                </>
+              );
+              const cls =
+                "bg-surface rounded-2xl p-5 border border-black/5 shadow-sm transition-shadow " +
+                (m.ready ? "hover:shadow-md hover:-translate-y-0.5 transition-transform" : "opacity-70");
+              return m.href ? (
+                <Link key={m.key} href={m.href} className={cls}>
+                  {inner}
+                </Link>
+              ) : (
+                <div key={m.key} className={cls}>
+                  {inner}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
