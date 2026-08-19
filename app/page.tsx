@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSeason } from "@/components/SeasonTheme";
 import { SeasonArt } from "@/components/SeasonArt";
 import {
@@ -51,6 +52,28 @@ export default function Home() {
   useEffect(() => {
     setNow(new Date());
   }, []);
+
+  // 静态服务器（CloudStudio 网关）对深层路径做 SPA 兜底，统一回退根 index.html，
+  // 导致直接访问深链时「首页被渲染在深链 URL 上」且 Next 不会自动恢复。
+  // router.replace(同 URL) 是空操作；改用 router.refresh() 让路由器按当前 URL 重新拉取对应路由 RSC 并重渲染。
+  // 4 秒兜底：若 refresh 未生效，恢复显示首页内容（避免卡在「加载中」）。
+  const router = useRouter();
+  const [recovering, setRecovering] = useState(false);
+  useEffect(() => {
+    const p = window.location.pathname.replace(/\/+$/, "");
+    if (p !== "") {
+      setRecovering(true);
+      router.refresh();
+      const t = setTimeout(() => setRecovering(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [router]);
+
+  if (recovering) {
+    return (
+      <main className="min-h-screen grid place-items-center bg-bg text-muted">加载中…</main>
+    );
+  }
 
   return (
     <main className="min-h-screen w-full flex flex-col bg-bg">
