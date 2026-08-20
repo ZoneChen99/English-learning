@@ -72,6 +72,14 @@ export const SEASON_GREETINGS: Record<Season, string> = {
   winter: "冬日，温一壶暖意",
 };
 
+/** 首页主标题下方的季节副文案 */
+export const SEASON_SUBTITLES: Record<Season, string> = {
+  spring: "在语言的世界里，遇见更好的自己",
+  summer: "探索语言的无限可能",
+  autumn: "在故事中理解世界，在语言中遇见智慧",
+  winter: "在安静中积蓄力量，在语言中收获温暖",
+};
+
 export const ALL_SEASONS: Season[] = ["spring", "summer", "autumn", "winter"];
 
 /** 气象季节：春 3-5，夏 6-8，秋 9-11，冬 12-2 */
