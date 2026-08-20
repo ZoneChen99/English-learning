@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getAllProgress, updateProgress } from "@/lib/db";
-import { fetchBook } from "@/lib/books";
+import { fetchBook, fetchBookMetas } from "@/lib/books";
 import { applyReview, type Grade } from "@/lib/sr";
 import { speak, warmupVoices } from "@/lib/audio";
 import { formatPos } from "@/lib/pos";
@@ -77,6 +77,10 @@ export default function ReviewHome() {
   const [stats, setStats] = useState({ recalled: 0, fuzzy: 0, forgot: 0 });
   const [mode, setMode] = useState<Mode>("sentence");
 
+  // 单本复习：URL ?book= 指定词书时，只复习该书的已学词
+  const [bookId, setBookId] = useState<string | null>(null);
+  const [bookName, setBookName] = useState<string>("");
+
   const bookCache = useRef<Map<string, WordBook>>(new Map());
 
   async function loadBook(id: string) {
@@ -98,8 +102,22 @@ export default function ReviewHome() {
     let alive = true;
     (async () => {
       try {
+        // 单本复习：优先取 URL ?book=，其次取 sessionStorage（CloudStudio 网关会丢弃 query，刷新时靠它保活）
+        const urlParam = new URLSearchParams(window.location.search).get("book");
+        const stored = typeof window !== "undefined" ? window.sessionStorage.getItem("review_book") : null;
+        const param = urlParam || stored || null;
+        setBookId(param);
+        if (param) {
+          const metas = await fetchBookMetas();
+          const meta = metas.find((m) => m.id === param);
+          if (alive) setBookName(meta?.name ?? param);
+        } else if (alive) {
+          setBookName("");
+        }
+
         const all = await getAllProgress();
-        const learned = all.filter((p) => p.status !== "new");
+        let learned = all.filter((p) => p.status !== "new");
+        if (param) learned = learned.filter((p) => p.bookId === param);
         if (learned.length === 0) {
           if (alive) setStatus("empty");
           return;
@@ -206,12 +224,16 @@ export default function ReviewHome() {
         <section className="max-w-xl mx-auto px-6 py-20 text-center">
           <div className="text-5xl">🍃</div>
           <h1 className="mt-4 text-2xl font-semibold text-ink">还没有可复习的单词</h1>
-          <p className="mt-3 text-muted">先去「学单词」攒一些词，再来这里做语境复习。</p>
+          <p className="mt-3 text-muted">
+            {bookId
+              ? `《${bookName}》里还没有学过的单词，先去「学习新词」攒一些吧。`
+              : "先去「学单词」攒一些词，再来这里做语境复习。"}
+          </p>
           <Link
-            href="/learn"
+            href={bookId ? `/learn/${bookId}` : "/learn"}
             className="mt-8 inline-block px-5 py-2.5 rounded-full bg-accent text-white text-sm hover:opacity-90"
           >
-            去学单词
+            {bookId ? "去学习新词" : "去学单词"}
           </Link>
         </section>
       </main>
@@ -235,10 +257,10 @@ export default function ReviewHome() {
               再来一轮
             </button>
             <Link
-              href="/"
+              href={bookId ? `/learn/${bookId}` : "/"}
               className="px-5 py-2.5 rounded-full bg-surface border border-black/5 text-sm text-ink hover:shadow"
             >
-              返回首页
+              {bookId ? `返回《${bookName}》` : "返回首页"}
             </Link>
           </div>
         </section>
@@ -253,11 +275,15 @@ export default function ReviewHome() {
   return (
     <main className="min-h-screen w-full bg-bg">
       <header className="flex items-center justify-between px-6 sm:px-10 py-4">
-        <Link href="/" className="text-sm text-muted hover:text-ink">
-          ← 返回首页
+        <Link
+          href={bookId ? `/learn/${bookId}` : "/"}
+          className="text-sm text-muted hover:text-ink"
+        >
+          ← {bookId ? `《${bookName}》` : "返回首页"}
         </Link>
         <span className="text-sm text-muted">
-          {SEASON_NAMES[season]} · 语境复习 {Math.min(pos + 1, queue.length)}/{queue.length}
+          {bookId ? `复习《${bookName}》` : `${SEASON_NAMES[season]} · 语境复习`}{" "}
+          {Math.min(pos + 1, queue.length)}/{queue.length}
         </span>
       </header>
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { fetchBook } from "@/lib/books";
 import { ensureWords, updateProgress, getBookProgress } from "@/lib/db";
 import { applyReview, newProgress, type Grade } from "@/lib/sr";
@@ -12,8 +13,9 @@ import type { Word, WordBook, WordProgress } from "@/lib/types";
 
 const MAX_AGAIN = 2; // 单卡本次会话最多重排次数，避免死循环
 const DAILY_OPTIONS = [10, 20, 30, 50];
+const LAST_BOOK_KEY = "el_last_book";
 
-type Status = "loading" | "planning" | "ready" | "done";
+type Status = "loading" | "choosing" | "planning" | "ready" | "done";
 
 function highlight(en: string, word: string) {
   const idx = en.toLowerCase().indexOf(word.toLowerCase());
@@ -40,9 +42,20 @@ function writeDaily(bookId: string, n: number) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(dailyKey(bookId), String(n));
 }
+function clampDaily(n: number): number {
+  if (!Number.isFinite(n)) return 10;
+  return Math.min(500, Math.max(1, Math.round(n)));
+}
 
 export default function Session({ bookId }: { bookId: string }) {
   const { season } = useSeason();
+  const router = useRouter();
+
+  function goReview() {
+    // CloudStudio 网关会丢弃 query，刷新时用 sessionStorage 保活单本复习上下文
+    if (typeof window !== "undefined") window.sessionStorage.setItem("review_book", bookId);
+    router.push(`/review?book=${bookId}`);
+  }
 
   const [book, setBook] = useState<WordBook | null>(null);
   const [status, setStatus] = useState<Status>("loading");
@@ -54,11 +67,14 @@ export default function Session({ bookId }: { bookId: string }) {
   const [showHistory, setShowHistory] = useState(false);
   const [accent, setAccentState] = useState<Accent>("us");
   const [dailyNew, setDailyNew] = useState<number>(20);
+  const [customVal, setCustomVal] = useState<string>("");
+
+  const [learnedCount, setLearnedCount] = useState(0); // 已学（非 new）词数，用于天数估算
 
   const progRef = useRef<Map<string, WordProgress>>(new Map());
   const againRef = useRef<Map<string, number>>(new Map());
 
-  // 加载词书与进度（不构建队列，留给计划页触发）
+  // 加载词书与进度（不构建队列，留给计划页触发）；记住上次词书
   useEffect(() => {
     warmupVoices();
     setAccentState(getAccent());
@@ -71,8 +87,12 @@ export default function Session({ bookId }: { bookId: string }) {
         const prog = await getBookProgress(b.id);
         if (!alive) return;
         progRef.current = new Map(prog.map((p) => [p.word, p]));
+        setLearnedCount(prog.filter((p) => p.status !== "new").length);
         setBook(b);
-        setStatus("planning");
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(LAST_BOOK_KEY, bookId);
+        }
+        setStatus("choosing");
       } catch (e) {
         console.error(e);
         if (alive) setStatus("done");
@@ -93,6 +113,8 @@ export default function Session({ bookId }: { bookId: string }) {
   }, [pos, status]);
 
   const current = queue[pos];
+  const remainingNew = book ? Math.max(0, book.words.length - learnedCount) : 0;
+  const daysToFinish = remainingNew > 0 ? Math.max(1, Math.ceil(remainingNew / dailyNew)) : 0;
 
   function startLearning() {
     if (!book) return;
@@ -167,33 +189,88 @@ export default function Session({ bookId }: { bookId: string }) {
     if (current) speak(current.word);
   }
 
+  function applyCustom() {
+    const n = clampDaily(parseInt(customVal, 10));
+    setDailyNew(n);
+    setCustomVal("");
+  }
+
   if (status === "loading") {
     return (
       <main className="min-h-screen grid place-items-center bg-bg text-muted">加载中…</main>
     );
   }
 
-  if (status === "planning") {
+  // ===== 模式选择：学习新词 / 复习已学 =====
+  if (status === "choosing") {
     return (
       <main className="min-h-screen w-full bg-bg">
         <header className="flex items-center justify-between px-6 sm:px-10 py-4">
           <Link href="/learn" className="text-sm text-muted hover:text-ink">
             ← 返回词书
           </Link>
+          <AccentToggle accent={accent} onChange={changeAccent} compact />
+        </header>
+        <section className="max-w-xl mx-auto px-6 py-8">
+          <h1 className="text-2xl font-semibold text-ink">{book?.name}</h1>
+          <p className="mt-2 text-muted text-sm">
+            共 {book?.words.length} 词 · 已学 {learnedCount} · 剩 {remainingNew} 个新词
+          </p>
+          <div className="mt-7 grid gap-4">
+            <button
+              onClick={() => setStatus("planning")}
+              className="text-left bg-surface rounded-3xl p-7 border border-black/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+            >
+              <div className="text-xl font-semibold text-ink">📘 学习新词</div>
+              <p className="mt-2 text-muted text-sm">
+                今天新学 {dailyNew} 个，到期单词自动排入复习。
+              </p>
+            </button>
+            <button
+              onClick={goReview}
+              className="text-left w-full bg-surface rounded-3xl p-7 border border-black/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+            >
+              <div className="text-xl font-semibold text-ink">🔁 复习已学</div>
+              <p className="mt-2 text-muted text-sm">
+                只复习《{book?.name}》里已经学过的单词（句子 / 单词 / 混合三种模式）。
+              </p>
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  // ===== 计划页：选每天背多少 =====
+  if (status === "planning") {
+    return (
+      <main className="min-h-screen w-full bg-bg">
+        <header className="flex items-center justify-between px-6 sm:px-10 py-4">
+          <button
+            onClick={() => setStatus("choosing")}
+            className="text-sm text-muted hover:text-ink"
+          >
+            ← {book?.name}
+          </button>
           <span className="text-sm text-muted">{book?.name}</span>
         </header>
         <section className="max-w-xl mx-auto px-6 py-10">
           <div className="bg-surface rounded-3xl p-8 border border-black/5 shadow-sm">
             <h1 className="text-2xl font-semibold text-ink">{book?.name}</h1>
-            <p className="mt-2 text-muted text-sm">共 {book?.words.length} 词。先定个今日计划，再开始背。</p>
+            <p className="mt-2 text-muted text-sm">
+              共 {book?.words.length} 词，已学 {learnedCount}，还剩 {remainingNew} 个新词。
+            </p>
 
             <div className="mt-7">
-              <p className="text-sm text-muted mb-2">今日新词</p>
+              <p className="text-sm text-muted mb-2">每天新学</p>
               <div className="flex gap-2 flex-wrap">
                 {DAILY_OPTIONS.map((n) => (
                   <button
                     key={n}
-                    onClick={() => setDailyNew(n)}
+                    onClick={() => {
+                      setDailyNew(n);
+                      setCustomVal("");
+                    }}
                     className={
                       "px-5 py-2 rounded-full text-sm transition " +
                       (dailyNew === n
@@ -204,7 +281,37 @@ export default function Session({ bookId }: { bookId: string }) {
                     {n} 个
                   </button>
                 ))}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={500}
+                    inputMode="numeric"
+                    placeholder="自定义"
+                    value={customVal}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9]/g, "");
+                      setCustomVal(v);
+                      if (v) setDailyNew(clampDaily(parseInt(v, 10)));
+                    }}
+                    className="w-24 px-3 py-2 rounded-full text-sm bg-bg border border-black/5 text-ink outline-none focus:border-accent"
+                  />
+                  <span className="text-xs text-muted">个</span>
+                </div>
               </div>
+            </div>
+
+            {/* 天数预估 */}
+            <div className="mt-5 rounded-2xl bg-accent/5 px-4 py-3 text-sm text-ink">
+              {remainingNew > 0 ? (
+                <>
+                  📅 按每天 {dailyNew} 个新词，预计约{" "}
+                  <span className="font-semibold text-accent">{daysToFinish} 天</span> 背完剩余{" "}
+                  {remainingNew} 个新词。
+                </>
+              ) : (
+                <>🎉 这本词书的新词都已学过，去「复习已学」巩固吧。</>
+              )}
             </div>
 
             <div className="mt-6">
@@ -240,12 +347,12 @@ export default function Session({ bookId }: { bookId: string }) {
             >
               再来一组
             </button>
-            <Link
-              href="/learn"
+            <button
+              onClick={() => setStatus("choosing")}
               className="px-5 py-2.5 rounded-full bg-surface border border-black/5 text-sm text-ink hover:shadow"
             >
-              返回词书
-            </Link>
+              返回模式选择
+            </button>
           </div>
         </section>
       </main>
@@ -255,9 +362,12 @@ export default function Session({ bookId }: { bookId: string }) {
   return (
     <main className="min-h-screen w-full bg-bg">
       <header className="flex items-center justify-between px-6 sm:px-10 py-4">
-        <Link href="/learn" className="text-sm text-muted hover:text-ink">
+        <button
+          onClick={() => setStatus("choosing")}
+          className="text-sm text-muted hover:text-ink"
+        >
           ← {book?.name}
-        </Link>
+        </button>
         <div className="flex items-center gap-3">
           <AccentToggle accent={accent} onChange={changeAccent} compact />
           <button

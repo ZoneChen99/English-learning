@@ -19,6 +19,7 @@ export default function LearnHome() {
   const { season } = useSeason();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastBook, setLastBook] = useState<Row | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -34,7 +35,14 @@ export default function LearnHome() {
             return { ...m, learned, due };
           })
         );
-        if (alive) setRows(computed);
+        if (!alive) return;
+        setRows(computed);
+        // 记住上次打开的词书，提供「继续上次」快捷入口
+        const lastId = window.localStorage.getItem("el_last_book");
+        if (lastId) {
+          const hit = computed.find((r) => r.id === lastId);
+          if (hit) setLastBook(hit);
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -57,7 +65,32 @@ export default function LearnHome() {
 
       <section className="max-w-3xl mx-auto px-6 py-8">
         <h1 className="text-3xl font-semibold text-ink">今天学哪一本？</h1>
-        <p className="mt-2 text-muted">每天新学 {DAILY_NEW} 个，到期单词自动排进复习。</p>
+        <p className="mt-2 text-muted">点开词书后，先选「学习新词」或「复习已学」，再开始。</p>
+
+        {lastBook && (
+          <Link
+            href={`/learn/${lastBook.id}`}
+            className="mt-6 block bg-accent/10 border border-accent/20 rounded-3xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-accent font-medium">继续上次</div>
+                <div className="text-xl font-semibold text-ink mt-1">{lastBook.name}</div>
+                <div className="text-xs text-muted mt-1">
+                  已学 {lastBook.learned}/{lastBook.count}
+                  {lastBook.due > 0 && ` · 今日待复习 ${lastBook.due}`}
+                </div>
+              </div>
+              <span className="text-accent text-sm">接着学 →</span>
+            </div>
+            <div className="mt-3 h-1.5 rounded-full bg-black/5 overflow-hidden">
+              <div
+                className="h-full bg-accent"
+                style={{ width: `${lastBook.count ? Math.round((lastBook.learned / lastBook.count) * 100) : 0}%` }}
+              />
+            </div>
+          </Link>
+        )}
 
         <div className="mt-8 grid gap-4">
           {loading && <p className="text-muted">加载中…</p>}

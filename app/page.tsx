@@ -78,6 +78,8 @@ function FilmIcon({ className }: { className?: string }) {
 
 export default function Home() {
   const { season, setSeason, auto, resetToAuto } = useSeason();
+  // 「开始学习」智能跳转：有上次词书则直接进该书，否则进选书页
+  const [quickHref, setQuickHref] = useState("/learn");
 
   // 静态服务器（CloudStudio 网关）对深层路径做 SPA 兜底，统一回退根 index.html，
   // 导致直接访问深链时「首页被渲染在深链 URL 上」且 Next 不会自动恢复。
@@ -86,6 +88,8 @@ export default function Home() {
   const router = useRouter();
   const [recovering, setRecovering] = useState(false);
   useEffect(() => {
+    const last = window.localStorage.getItem("el_last_book");
+    if (last) setQuickHref(`/learn/${last}`);
     const p = window.location.pathname.replace(/\/+$/, "");
     if (p !== "") {
       setRecovering(true);
@@ -141,7 +145,7 @@ export default function Home() {
           </p>
           <div className="mt-8">
             <Link
-              href="/learn"
+              href={quickHref}
               className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-white text-base font-medium bg-accent hover:bg-accent/90 shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5"
             >
               开始学习
