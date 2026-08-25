@@ -16,7 +16,7 @@ import {
 const NAV = [
   { label: "首页", href: "/" },
   { label: "单词学习", href: "/learn" },
-  { label: "句子学习", href: "/review?mode=sentence" },
+  { label: "句子学习", href: "/review?method=sentence" },
   { label: "影视学习", href: "/vlog" },
   { label: "学习计划", href: "#" },
   { label: "关于我们", href: "#" },
@@ -34,7 +34,7 @@ const MODULES = [
     key: "sentences",
     title: "句子学习",
     desc: "地道表达，灵活运用",
-    href: "/review?mode=sentence",
+    href: "/review?method=sentence",
     icon: SentenceIcon,
   },
   {
