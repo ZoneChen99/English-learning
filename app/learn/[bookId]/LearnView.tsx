@@ -128,7 +128,7 @@ export default function Session({ bookId }: { bookId: string }) {
     setSeen([]);
     setStats({ learned: 0, reviewed: 0, again: 0 });
     setStatus(q.length ? "ready" : "done");
-    if (q.length) speak(q[0].word);
+    // 首卡朗读由 useEffect([pos, status]) 触发，这里不再重复 speak，避免竞态导致回退机械音
   }
 
   function onAnswer(grade: Grade) {

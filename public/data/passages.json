@@ -1,0 +1,20 @@
+[
+  {
+    "id": "city",
+    "title": "A Morning in the City",
+    "text": "I had a comfortable trip to the city center. The journey was convenient thanks to the new subway. The atmosphere there was lively, and I had the opportunity to explore many popular places. I wanted to experience the local culture, so I visited a museum and tried traditional food. It was a memorable day.",
+    "words": ["comfortable", "journey", "convenient", "atmosphere", "opportunity", "explore", "popular", "experience", "local", "culture"]
+  },
+  {
+    "id": "study",
+    "title": "Technology and Study",
+    "text": "Modern technology has changed how we study. A lot of information is now available online, and we can use it to improve our skills. Good study methods require practice, but they help us become more efficient. With a clear purpose and the right resources, anyone can achieve their goals and create a better future.",
+    "words": ["technology", "information", "available", "improve", "method", "require", "efficient", "purpose", "resource", "achieve", "create"]
+  },
+  {
+    "id": "health",
+    "title": "Health and Daily Life",
+    "text": "Good health comes from a balance of regular exercise and rest. Daily exercise can reduce stress and give you more energy. It also benefits both your physical and mental condition. The key is to make it a habit. Once you build this habit, you will feel the benefit every day.",
+    "words": ["health", "balance", "regular", "exercise", "reduce", "energy", "benefit", "physical", "mental", "habit"]
+  }
+]

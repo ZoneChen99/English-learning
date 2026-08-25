@@ -7,16 +7,18 @@ import { fetchBook, fetchBookMetas } from "@/lib/books";
 import { applyReview, type Grade } from "@/lib/sr";
 import { speak, warmupVoices } from "@/lib/audio";
 import { formatPos } from "@/lib/pos";
+import { fetchPassages, baseOf, type Passage } from "@/lib/passages";
 import { useSeason } from "@/components/SeasonTheme";
 import { SEASON_NAMES } from "@/lib/season";
 import type { Word, WordBook, WordProgress } from "@/lib/types";
 
 /**
- * 两种复习方式：
+ * 三种复习方式：
  *  - "word"     单词单独复习：题型「看词选译」（见词选中文释义）与「拼写」（看释义拼出单词）
- *  - "sentence" 句子中复习词汇：在例句里遮罩目标词，凭语境回忆（让背过的词融入句子）
+ *  - "sentence" 句子中复习词汇：在例句里遮罩目标词，凭语境回忆
+ *  - "passage"  文章复习：把背过的词融入短文/长文，遮罩已学词再揭晓
  */
-type Method = "word" | "sentence";
+type Method = "word" | "sentence" | "passage";
 type Exercise = "choice" | "spell";
 type Status = "loading" | "empty" | "ready" | "done";
 
@@ -27,19 +29,29 @@ interface Card {
   options?: string[];
 }
 
-const METHOD_LABEL: Record<Method, string> = { word: "🔤 单词复习", sentence: "📖 句子复习" };
+interface PassageCard {
+  passage: Passage;
+  /** 该文中用户已学过的目标词（基形） */
+  targets: string[];
+}
+
+const METHOD_LABEL: Record<Method, string> = {
+  word: "🔤 单词复习",
+  sentence: "📖 句子复习",
+  passage: "📰 文章复习",
+};
 const EXERCISE_LABEL: Record<Exercise, string> = { choice: "看词选译", spell: "拼写" };
 
 /** 复习方式：URL ?method= 优先，兼容旧 ?mode=，其次 localStorage，默认单词复习 */
 function readInitialMethod(): Method {
   if (typeof window === "undefined") return "word";
   const p = new URLSearchParams(window.location.search).get("method");
-  if (p === "word" || p === "sentence") return p;
+  if (p === "word" || p === "sentence" || p === "passage") return p;
   const m = new URLSearchParams(window.location.search).get("mode");
   if (m === "sentence") return "sentence";
   if (m === "word") return "word";
   const saved = localStorage.getItem("review-method");
-  if (saved === "word" || saved === "sentence") return saved as Method;
+  if (saved === "word" || saved === "sentence" || saved === "passage") return saved as Method;
   return "word";
 }
 
@@ -83,6 +95,32 @@ function buildOptions(correct: string, all: Word[]): string[] {
   return [correct, ...picked].sort(() => Math.random() - 0.5);
 }
 
+// 文章复习：把短文里「已学目标词」遮罩/高亮（按基形匹配，兼容复数/时态）
+function maskPassage(text: string, targets: string[], revealed: boolean) {
+  const set = new Set(targets);
+  const parts = text.split(/([A-Za-z][A-Za-z'’-]*)/g);
+  return parts.map((part, i) => {
+    if (/^[A-Za-z]/.test(part) && set.has(baseOf(part))) {
+      if (revealed) {
+        return (
+          <mark key={i} className="bg-accent/20 text-ink rounded px-0.5 font-medium">
+            {part}
+          </mark>
+        );
+      }
+      return (
+        <span
+          key={i}
+          className="inline-block min-w-[3rem] border-b-2 border-accent/60 text-center text-accent/70 select-none mx-0.5"
+        >
+          ＿＿
+        </span>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 export default function ReviewSession({
   bookId,
   onBack,
@@ -107,6 +145,11 @@ export default function ReviewSession({
   const [stats, setStats] = useState({ correct: 0, wrong: 0, recalled: 0, fuzzy: 0, forgot: 0 });
   const [bookName, setBookName] = useState<string>("");
   const [round, setRound] = useState(0); // 用于「再来一轮」重触发
+
+  // 文章复习状态
+  const [passages, setPassages] = useState<PassageCard[]>([]);
+  const [passagePos, setPassagePos] = useState(0);
+  const [passageRevealed, setPassageRevealed] = useState(false);
 
   const bookCache = useRef<Map<string, WordBook>>(new Map());
 
@@ -139,6 +182,27 @@ export default function ReviewSession({
         }
 
         const all = await getAllProgress();
+
+        // 文章复习：用全部已学词（跨词书），把短文中的已学目标词遮罩
+        if (method === "passage") {
+          const learnedSet = new Set(all.filter((p) => p.status !== "new").map((p) => p.word));
+          const raw = await fetchPassages();
+          const usable = raw
+            .map((pg) => ({ passage: pg, targets: pg.words.filter((w) => learnedSet.has(w)) }))
+            .filter((x) => x.targets.length > 0);
+          if (!alive) return;
+          if (usable.length === 0) {
+            setStatus("empty");
+            return;
+          }
+          setPassages(usable);
+          setPassagePos(0);
+          setPassageRevealed(false);
+          setStats({ correct: 0, wrong: 0, recalled: 0, fuzzy: 0, forgot: 0 });
+          setStatus("ready");
+          return;
+        }
+
         let learned = all.filter((p) => p.status !== "new");
         if (bookId) learned = learned.filter((p) => p.bookId === bookId);
         if (learned.length === 0) {
@@ -309,6 +373,11 @@ export default function ReviewSession({
     setPos((p) => p + 1);
   }
 
+  function nextPassage() {
+    setPassageRevealed(false);
+    setPassagePos((p) => p + 1);
+  }
+
   const backEl = onBack ? (
     <button onClick={onBack} className="text-sm text-muted hover:text-ink">
       ← {backLabel}
@@ -350,6 +419,107 @@ export default function ReviewSession({
             >
               {bookId ? "去学习新词" : "去学单词"}
             </Link>
+          )}
+        </section>
+      </main>
+    );
+  }
+
+  // ===== 文章复习：背过的词融入短文/长文 =====
+  if (method === "passage" && status === "ready") {
+    const pc = passages[passagePos];
+    if (!pc) {
+      return (
+        <main className="min-h-screen w-full bg-bg">
+          <section className="max-w-xl mx-auto px-6 py-16 text-center">
+            <div className="text-5xl">🌿</div>
+            <h1 className="mt-4 text-2xl font-semibold text-ink">文章复习完成</h1>
+            <p className="mt-3 text-muted">共读了 {passages.length} 篇短文。</p>
+            <div className="mt-8 flex gap-3 justify-center">
+              <button
+                onClick={() => setRound((r) => r + 1)}
+                className="px-5 py-2.5 rounded-full bg-accent text-white text-sm hover:opacity-90"
+              >
+                再来一轮
+              </button>
+              {onBack ? (
+                <button
+                  onClick={onBack}
+                  className="px-5 py-2.5 rounded-full bg-surface border border-black/5 text-sm text-ink hover:shadow"
+                >
+                  返回
+                </button>
+              ) : (
+                <Link
+                  href={backHref}
+                  className="px-5 py-2.5 rounded-full bg-surface border border-black/5 text-sm text-ink hover:shadow"
+                >
+                  {backLabel}
+                </Link>
+              )}
+            </div>
+          </section>
+        </main>
+      );
+    }
+
+    return (
+      <main className="min-h-screen w-full bg-bg">
+        <header className="flex items-center justify-between px-6 sm:px-10 py-4">
+          {backEl}
+          <span className="text-sm text-muted">
+            文章复习 {Math.min(passagePos + 1, passages.length)}/{passages.length}
+          </span>
+        </header>
+
+        <section className="max-w-2xl mx-auto px-6 py-6">
+          {/* 复习方式切换 */}
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <span className="text-xs text-muted mr-1">复习方式</span>
+            {(["word", "sentence", "passage"] as Method[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => changeMethod(m)}
+                aria-pressed={method === m}
+                className={
+                  "px-3 py-1.5 rounded-full text-xs transition " +
+                  (method === m
+                    ? "bg-accent text-white"
+                    : "bg-surface border border-black/5 text-ink hover:shadow")
+                }
+              >
+                {METHOD_LABEL[m]}
+              </button>
+            ))}
+          </div>
+
+          <p className="text-sm text-muted">先通读短文，把遮住的已学词「捡」回来，再揭晓。</p>
+          <div className="mt-4 bg-surface rounded-3xl p-8 border border-black/5 shadow-sm">
+            <h2 className="text-xl font-semibold text-ink">{pc.passage.title}</h2>
+            <p className="mt-4 text-ink/90 leading-loose text-lg">
+              {maskPassage(pc.passage.text, pc.targets, passageRevealed)}
+            </p>
+            {passageRevealed && (
+              <div className="mt-5 pt-4 border-t border-black/5 text-sm text-muted">
+                本篇复习 {pc.targets.length} 个已学词：{pc.targets.join(" · ")}
+              </div>
+            )}
+          </div>
+
+          {!passageRevealed ? (
+            <button
+              onClick={() => setPassageRevealed(true)}
+              className="mt-6 w-full py-3 rounded-2xl bg-accent text-white text-sm hover:opacity-90"
+            >
+              揭晓已学词
+            </button>
+          ) : (
+            <button
+              onClick={nextPassage}
+              className="mt-6 w-full py-3 rounded-2xl bg-accent text-white text-sm hover:opacity-90"
+            >
+              {passagePos + 1 >= passages.length ? "完成 →" : "下一篇 →"}
+            </button>
           )}
         </section>
       </main>
@@ -412,7 +582,7 @@ export default function ReviewSession({
         {/* 复习方式切换 */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className="text-xs text-muted mr-1">复习方式</span>
-          {(["word", "sentence"] as Method[]).map((m) => (
+          {(["word", "sentence", "passage"] as Method[]).map((m) => (
             <button
               key={m}
               onClick={() => changeMethod(m)}
