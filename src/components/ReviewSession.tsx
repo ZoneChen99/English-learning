@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { getAllProgress, updateProgress } from "@/lib/db";
+import { getAllProgress, updateProgress, addWord } from "@/lib/db";
 import { fetchBook, fetchBookMetas, findWord } from "@/lib/books";
 import { applyReview, type Grade } from "@/lib/sr";
 import { speak, warmupVoices } from "@/lib/audio";
@@ -97,26 +97,42 @@ function buildOptions(correct: string, all: Word[]): string[] {
   return [correct, ...picked].sort(() => Math.random() - 0.5);
 }
 
-// 文章复习：把短文里「已学目标词」遮罩/高亮（按基形匹配，兼容复数/时态）
-function maskPassage(text: string, targets: string[], revealed: boolean) {
+// 文章复习：把短文里「已学目标词」遮罩/高亮；全文单词可点击查词（按基形匹配，兼容复数/时态）
+function maskPassage(
+  text: string,
+  targets: string[],
+  revealed: boolean,
+  onWordClick: (word: string) => void
+) {
   const set = new Set(targets);
   const parts = text.split(/([A-Za-z][A-Za-z'’-]*)/g);
   return parts.map((part, i) => {
-    if (/^[A-Za-z]/.test(part) && set.has(baseOf(part))) {
-      if (revealed) {
+    if (/^[A-Za-z]/.test(part)) {
+      const isTarget = set.has(baseOf(part));
+      // 未揭晓的目标词：遮罩成填空，不参与点词（先凭语境回忆）
+      if (isTarget && !revealed) {
         return (
-          <mark key={i} className="bg-accent/20 text-ink rounded px-0.5 font-medium">
-            {part}
-          </mark>
+          <span
+            key={i}
+            className="inline-block min-w-[3rem] border-b-2 border-accent/60 text-center text-accent/70 select-none mx-0.5"
+          >
+            ＿＿
+          </span>
         );
       }
       return (
-        <span
+        <button
           key={i}
-          className="inline-block min-w-[3rem] border-b-2 border-accent/60 text-center text-accent/70 select-none mx-0.5"
+          onClick={() => onWordClick(part)}
+          className={
+            "rounded px-0.5 transition " +
+            (isTarget
+              ? "bg-accent/20 text-ink font-medium hover:bg-accent/30"
+              : "text-ink/90 hover:bg-accent/10 hover:text-accent cursor-pointer")
+          }
         >
-          ＿＿
-        </span>
+          {part}
+        </button>
       );
     }
     return <span key={i}>{part}</span>;
@@ -152,6 +168,14 @@ export default function ReviewSession({
   const [passages, setPassages] = useState<PassageCard[]>([]);
   const [passagePos, setPassagePos] = useState(0);
   const [passageRevealed, setPassageRevealed] = useState(false);
+
+  // 文章点词查词
+  const [lookup, setLookup] = useState<{
+    raw: string;
+    word: Word | null;
+    bookId?: string;
+    saved?: boolean;
+  } | null>(null);
 
   const bookCache = useRef<Map<string, WordBook>>(new Map());
 
@@ -392,7 +416,23 @@ export default function ReviewSession({
 
   function nextPassage() {
     setPassageRevealed(false);
+    setLookup(null);
     setPassagePos((p) => p + 1);
+  }
+
+  // 点词查词：查释义/词性
+  function onWordClick(raw: string) {
+    const key = raw.toLowerCase().replace(/[^a-z']/g, "");
+    if (!key) return;
+    findWord(raw).then((found) => {
+      setLookup({ raw, word: found?.word ?? null, bookId: found?.bookId });
+    });
+  }
+
+  function addToVocab() {
+    if (!lookup || !lookup.word || !lookup.bookId) return;
+    addWord(lookup.word.word, lookup.bookId);
+    setLookup({ ...lookup, saved: true });
   }
 
   const backEl = onBack ? (
@@ -510,11 +550,11 @@ export default function ReviewSession({
             ))}
           </div>
 
-          <p className="text-sm text-muted">先通读短文，把遮住的已学词「捡」回来，再揭晓。</p>
+          <p className="text-sm text-muted">先通读短文，把遮住的已学词「捡」回来再揭晓；点任意单词可查释义、词性。</p>
           <div className="mt-4 bg-surface rounded-3xl p-8 border border-black/5 shadow-sm">
             <h2 className="text-xl font-semibold text-ink">{pc.passage.title}</h2>
             <p className="mt-4 text-ink/90 leading-loose text-lg">
-              {maskPassage(pc.passage.text, pc.targets, passageRevealed)}
+              {maskPassage(pc.passage.text, pc.targets, passageRevealed, onWordClick)}
             </p>
             {passageRevealed && (
               <div className="mt-5 pt-4 border-t border-black/5">
@@ -555,6 +595,68 @@ export default function ReviewSession({
             </button>
           )}
         </section>
+
+        {/* 点词查词弹层 */}
+        {lookup && (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center p-4"
+            onClick={() => setLookup(null)}
+          >
+            <div
+              className="w-full max-w-md bg-surface rounded-2xl p-5 border border-black/5 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <h3 className="text-xl font-semibold text-ink">{lookup.raw}</h3>
+                {lookup.word?.phonetic && (
+                  <span className="text-muted text-sm">/{lookup.word.phonetic}/</span>
+                )}
+                {lookup.word?.pos && (
+                  <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs">
+                    {formatPos(lookup.word.pos)}
+                  </span>
+                )}
+                <button
+                  onClick={() => setLookup(null)}
+                  aria-label="关闭"
+                  className="ml-auto w-7 h-7 rounded-full bg-black/5 text-muted hover:text-ink text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {lookup.word ? (
+                <>
+                  <p className="mt-3 text-ink/90 text-base">{lookup.word.translation}</p>
+                  {lookup.word.definition && (
+                    <p className="mt-1 text-muted text-sm">{lookup.word.definition}</p>
+                  )}
+                  <div className="mt-4 flex items-center gap-2">
+                    <button
+                      onClick={() => speak(lookup.word!.word)}
+                      className="px-3 py-1.5 rounded-full bg-accent/10 text-accent text-xs hover:bg-accent/20"
+                    >
+                      🔊 朗读
+                    </button>
+                    {lookup.bookId && !lookup.saved && (
+                      <button
+                        onClick={addToVocab}
+                        className="px-3 py-1.5 rounded-full bg-accent text-white text-xs hover:opacity-90"
+                      >
+                        加入生词本
+                      </button>
+                    )}
+                    {lookup.saved && (
+                      <span className="text-xs text-muted">已加入生词本 ✓</span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="mt-3 text-sm text-muted">「{lookup.raw}」词库未收录。</p>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     );
   }
