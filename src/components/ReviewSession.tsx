@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getAllProgress, updateProgress } from "@/lib/db";
-import { fetchBook, fetchBookMetas } from "@/lib/books";
+import { fetchBook, fetchBookMetas, findWord } from "@/lib/books";
 import { applyReview, type Grade } from "@/lib/sr";
 import { speak, warmupVoices } from "@/lib/audio";
 import { formatPos } from "@/lib/pos";
@@ -33,6 +33,8 @@ interface PassageCard {
   passage: Passage;
   /** 该文中用户已学过的目标词（基形） */
   targets: string[];
+  /** 已学目标词的释义（词性 + 中文释义），用于「解释释义」 */
+  meanings: { word: string; pos: string; translation: string }[];
 }
 
 const METHOD_LABEL: Record<Method, string> = {
@@ -187,9 +189,24 @@ export default function ReviewSession({
         if (method === "passage") {
           const learnedSet = new Set(all.filter((p) => p.status !== "new").map((p) => p.word));
           const raw = await fetchPassages();
-          const usable = raw
-            .map((pg) => ({ passage: pg, targets: pg.words.filter((w) => learnedSet.has(w)) }))
-            .filter((x) => x.targets.length > 0);
+          const usable: PassageCard[] = [];
+          for (const pg of raw) {
+            const targets = pg.words.filter((w) => learnedSet.has(w));
+            if (targets.length === 0) continue;
+            // 解析每个已学目标词的释义（词性 + 中文释义），供揭晓后「解释释义」
+            const meanings: { word: string; pos: string; translation: string }[] = [];
+            for (const t of targets) {
+              const found = await findWord(t);
+              if (found) {
+                meanings.push({
+                  word: t,
+                  pos: formatPos(found.word.pos) ?? "",
+                  translation: found.word.translation,
+                });
+              }
+            }
+            usable.push({ passage: pg, targets, meanings });
+          }
           if (!alive) return;
           if (usable.length === 0) {
             setStatus("empty");
@@ -500,8 +517,24 @@ export default function ReviewSession({
               {maskPassage(pc.passage.text, pc.targets, passageRevealed)}
             </p>
             {passageRevealed && (
-              <div className="mt-5 pt-4 border-t border-black/5 text-sm text-muted">
-                本篇复习 {pc.targets.length} 个已学词：{pc.targets.join(" · ")}
+              <div className="mt-5 pt-4 border-t border-black/5">
+                <p className="text-xs text-muted mb-1">本篇词汇释义（{pc.meanings.length}）</p>
+                <ul className="divide-y divide-black/5">
+                  {pc.meanings.map((m, i) => (
+                    <li key={i} className="py-2 flex items-baseline gap-2">
+                      <span className="font-medium text-ink">{m.word}</span>
+                      {m.pos && <span className="text-xs text-accent">{m.pos}</span>}
+                      <span className="text-sm text-ink/80 flex-1">{m.translation}</span>
+                      <button
+                        onClick={() => speak(m.word)}
+                        aria-label="朗读"
+                        className="w-7 h-7 rounded-full bg-accent/10 text-accent text-sm hover:bg-accent/20 shrink-0"
+                      >
+                        🔊
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>
