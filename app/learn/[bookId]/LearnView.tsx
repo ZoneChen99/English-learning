@@ -2,20 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { fetchBook } from "@/lib/books";
 import { ensureWords, updateProgress, getBookProgress } from "@/lib/db";
 import { applyReview, newProgress, type Grade } from "@/lib/sr";
 import { speak, warmupVoices, getAccent, setAccent, type Accent } from "@/lib/audio";
-import { useSeason } from "@/components/SeasonTheme";
-import { SEASON_NAMES } from "@/lib/season";
+import ReviewSession from "@/components/ReviewSession";
 import type { Word, WordBook, WordProgress } from "@/lib/types";
 
 const MAX_AGAIN = 2; // 单卡本次会话最多重排次数，避免死循环
 const DAILY_OPTIONS = [10, 20, 30, 50];
 const LAST_BOOK_KEY = "el_last_book";
 
-type Status = "loading" | "choosing" | "planning" | "ready" | "done";
+type Status = "loading" | "choosing" | "planning" | "reviewing" | "ready" | "done";
 
 function highlight(en: string, word: string) {
   const idx = en.toLowerCase().indexOf(word.toLowerCase());
@@ -48,15 +46,6 @@ function clampDaily(n: number): number {
 }
 
 export default function Session({ bookId }: { bookId: string }) {
-  const { season } = useSeason();
-  const router = useRouter();
-
-  function goReview() {
-    // CloudStudio 网关会丢弃 query，刷新时用 sessionStorage 保活单本复习上下文
-    if (typeof window !== "undefined") window.sessionStorage.setItem("review_book", bookId);
-    router.push(`/review?book=${bookId}`);
-  }
-
   const [book, setBook] = useState<WordBook | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [queue, setQueue] = useState<Word[]>([]);
@@ -189,12 +178,6 @@ export default function Session({ bookId }: { bookId: string }) {
     if (current) speak(current.word);
   }
 
-  function applyCustom() {
-    const n = clampDaily(parseInt(customVal, 10));
-    setDailyNew(n);
-    setCustomVal("");
-  }
-
   if (status === "loading") {
     return (
       <main className="min-h-screen grid place-items-center bg-bg text-muted">加载中…</main>
@@ -227,7 +210,7 @@ export default function Session({ bookId }: { bookId: string }) {
               </p>
             </button>
             <button
-              onClick={goReview}
+              onClick={() => setStatus("reviewing")}
               className="text-left w-full bg-surface rounded-3xl p-7 border border-black/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
             >
               <div className="text-xl font-semibold text-ink">🔁 复习已学</div>
@@ -238,6 +221,17 @@ export default function Session({ bookId }: { bookId: string }) {
           </div>
         </section>
       </main>
+    );
+  }
+
+  // ===== 复习已学（内嵌，停留在本词书页面） =====
+  if (status === "reviewing") {
+    return (
+      <ReviewSession
+        bookId={bookId}
+        onBack={() => setStatus("choosing")}
+        backLabel={`《${book?.name}》`}
+      />
     );
   }
 
@@ -282,12 +276,13 @@ export default function Session({ bookId }: { bookId: string }) {
                   </button>
                 ))}
                 <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted">自定义</span>
                   <input
                     type="number"
                     min={1}
                     max={500}
                     inputMode="numeric"
-                    placeholder="自定义"
+                    placeholder="填个数"
                     value={customVal}
                     onChange={(e) => {
                       const v = e.target.value.replace(/[^0-9]/g, "");
@@ -412,6 +407,24 @@ export default function Session({ bookId }: { bookId: string }) {
       )}
 
       <section className="max-w-2xl mx-auto px-6 py-6">
+        {/* 每日目标进度条 */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-xs text-muted mb-1.5">
+            <span>今日目标 · 新学 {stats.learned}/{dailyNew} 个</span>
+            <span className="text-accent font-medium">
+              {Math.min(100, Math.round((stats.learned / dailyNew) * 100))}%
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-black/5 overflow-hidden">
+            <div
+              className="h-full bg-accent rounded-full transition-all duration-300"
+              style={{
+                width: `${Math.min(100, Math.round((stats.learned / dailyNew) * 100))}%`,
+              }}
+            />
+          </div>
+        </div>
+
         <div className="bg-surface rounded-3xl p-8 border border-black/5 shadow-sm min-h-[320px] flex flex-col">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h2 className="text-4xl font-semibold text-ink">{current.word}</h2>
